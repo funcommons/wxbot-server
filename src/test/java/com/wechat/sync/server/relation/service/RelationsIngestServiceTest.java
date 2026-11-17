@@ -227,6 +227,43 @@ class RelationsIngestServiceTest {
         verify(contactMapper, never()).insert(any(WxContactEntity.class));
     }
 
+    /** 部分更新语义：载荷缺席的业务字段不得进 SET（C++ 客户端只带子集；10106 回归 + 防既有行被抹）。 */
+    @Test
+    void contactUpdateSkipsAbsentFieldsFromSetClause() {
+        WxContactEntity existing = contactRow(11L);
+        given(contactMapper.selectOne(any())).willReturn(existing);
+        given(contactMapper.update(isNull(), any())).willReturn(1);
+
+        // wxbot-helper（C++）真实载荷形态：仅 username/source/nick_name/remark/alias，其余缺席
+        RelationsReportRequest.ContactItem cppShape = new RelationsReportRequest.ContactItem(
+                "wxid_a_0002", "contact", null, "nick", "remark", "alias", null, null, null, null, null);
+        assertThat(service.ingest(req(ACCOUNT, List.of(cppShape))).upserted().contacts()).isEqualTo(1);
+
+        verify(contactMapper).update(isNull(), contactUpdate.capture());
+        String sqlSet = contactUpdate.getValue().getSqlSet();
+        assertThat(sqlSet)
+                .contains("source=", "nick_name=", "remark=", "alias=", "updated_at=")
+                .doesNotContain("is_in_chat_room", "contact_id", "local_type",
+                        "delete_flag", "big_head_url", "description", "tag_ids");
+    }
+
+    /** insert 兜底：is_in_chat_room 缺席时按 username 形态推导（@chatroom→true，否则 false），不炸 NOT NULL。 */
+    @Test
+    void contactInsertDerivesIsInChatRoomWhenAbsent() {
+        given(contactMapper.selectOne(any())).willReturn(null, null);
+
+        RelationsReportRequest.ContactItem room = new RelationsReportRequest.ContactItem(
+                "123@chatroom", "contact", null, null, null, null, null, null, null, null, null);
+        RelationsReportRequest.ContactItem plain = new RelationsReportRequest.ContactItem(
+                "wxid_c_0003", null, null, null, null, null, null, null, null, null, null);
+        var vo = service.ingest(req(ACCOUNT, List.of(room, plain)));
+
+        assertThat(vo.upserted().contacts()).isEqualTo(2);
+        verify(contactMapper, times(2)).insert(contactInsert.capture());
+        assertThat(contactInsert.getAllValues().get(0).getIsInChatRoom()).isTrue();
+        assertThat(contactInsert.getAllValues().get(1).getIsInChatRoom()).isFalse();
+    }
+
     @Test
     void groupUpsertInsertsNewAndUpdatesExisting() {
         WxGroupEntity existing = new WxGroupEntity();
@@ -262,7 +299,9 @@ class RelationsIngestServiceTest {
         assertThat(memberInsert.getValue().getMemberUsername()).isEqualTo("wxid_c_0003");
         assertThat(memberInsert.getValue().getIsOwner()).isFalse();
         verify(groupMemberMapper).update(isNull(), memberUpdate.capture());
-        assertThat(memberUpdate.getValue().getSqlSet()).contains("nick_name=", "remark=", "is_owner=");
+        // member() 的 remark=null（缺席）→ 部分更新语义不进 SET；is_owner 恒写（Boolean 归一）
+        assertThat(memberUpdate.getValue().getSqlSet()).contains("nick_name=", "is_owner=")
+                .doesNotContain("remark");
         assertThat(memberUpdate.getValue().getParamNameValuePairs()).containsValue(Boolean.TRUE);
     }
 

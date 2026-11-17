@@ -38,6 +38,11 @@ import java.util.Set;
  * 避免抹掉标签结果）。校验口径：account 缺失 → 10101，元素 username/label_name 缺失或枚举越界 → 10102
  * （bean validation 会被框架翻成 10100，故这里显式抛）；10101/10102 均带 {@code error[]}（field + value，
  * 见 {@link #paramError}）。
+ *
+ * <p><strong>部分更新语义（2026-11-17 修复）</strong>：update 路径的业务字段一律「缺席/为 null 不写 SET」——
+ * C++ 客户端（wxbot-helper sync 模块）载荷只带 wxdb 有的字段子集（无 {@code is_in_chat_room /
+ * contact_id / big_head_url} 等），Python 客户端则全量；无条件覆盖会把 NOT NULL 列写成 null（10106 炸约束）
+ * 或抹掉既有行数据。语义 = 字段缺席即不动库值；需要清空时由数据源真值自然带出，v1 不支持显式置 null。
  */
 @Slf4j
 @Service
@@ -110,7 +115,10 @@ public class RelationsIngestService {
                 entity.setRemark(item.remark());
                 entity.setAlias(item.alias());
                 entity.setLocalType(item.localType());
-                entity.setIsInChatRoom(item.isInChatRoom());
+                // is_in_chat_room 是 NOT NULL 列且 C++ 客户端（wxbot-helper）载荷不带该键——
+                // 缺席时按 username 形态兜底推导，保证新建行不炸约束
+                entity.setIsInChatRoom(item.isInChatRoom() != null
+                        ? item.isInChatRoom() : username.endsWith("@chatroom"));
                 entity.setDeleteFlag(item.deleteFlag());
                 entity.setBigHeadUrl(item.bigHeadUrl());
                 entity.setDescription(item.description());
@@ -120,15 +128,15 @@ public class RelationsIngestService {
             } else if (contactMapper.update(null, new LambdaUpdateWrapper<WxContactEntity>()
                     .eq(WxContactEntity::getId, existing.getId())
                     .set(WxContactEntity::getSource, source)
-                    .set(WxContactEntity::getContactId, contactId)
-                    .set(WxContactEntity::getNickName, item.nickName())
-                    .set(WxContactEntity::getRemark, item.remark())
-                    .set(WxContactEntity::getAlias, item.alias())
-                    .set(WxContactEntity::getLocalType, item.localType())
-                    .set(WxContactEntity::getIsInChatRoom, item.isInChatRoom())
-                    .set(WxContactEntity::getDeleteFlag, item.deleteFlag())
-                    .set(WxContactEntity::getBigHeadUrl, item.bigHeadUrl())
-                    .set(WxContactEntity::getDescription, item.description())
+                    .set(contactId != null, WxContactEntity::getContactId, contactId)
+                    .set(item.nickName() != null, WxContactEntity::getNickName, item.nickName())
+                    .set(item.remark() != null, WxContactEntity::getRemark, item.remark())
+                    .set(item.alias() != null, WxContactEntity::getAlias, item.alias())
+                    .set(item.localType() != null, WxContactEntity::getLocalType, item.localType())
+                    .set(item.isInChatRoom() != null, WxContactEntity::getIsInChatRoom, item.isInChatRoom())
+                    .set(item.deleteFlag() != null, WxContactEntity::getDeleteFlag, item.deleteFlag())
+                    .set(item.bigHeadUrl() != null, WxContactEntity::getBigHeadUrl, item.bigHeadUrl())
+                    .set(item.description() != null, WxContactEntity::getDescription, item.description())
                     .set(WxContactEntity::getUpdatedAt, OffsetDateTime.now())) == 1) {
                 count++;
             }   // 0 行命中 = 与管理端并发软删：不计 upserted，下轮上报自愈
@@ -163,10 +171,10 @@ public class RelationsIngestService {
                 count++;
             } else if (groupMapper.update(null, new LambdaUpdateWrapper<WxGroupEntity>()
                     .eq(WxGroupEntity::getId, existing.getId())
-                    .set(WxGroupEntity::getRoomId, roomId)
-                    .set(WxGroupEntity::getOwnerUsername, item.ownerUsername())
-                    .set(WxGroupEntity::getDisplayName, item.displayName())
-                    .set(WxGroupEntity::getMemberCount, item.memberCount())
+                    .set(roomId != null, WxGroupEntity::getRoomId, roomId)
+                    .set(item.ownerUsername() != null, WxGroupEntity::getOwnerUsername, item.ownerUsername())
+                    .set(item.displayName() != null, WxGroupEntity::getDisplayName, item.displayName())
+                    .set(item.memberCount() != null, WxGroupEntity::getMemberCount, item.memberCount())
                     .set(WxGroupEntity::getUpdatedAt, OffsetDateTime.now())) == 1) {
                 count++;
             }   // 0 行命中 = 并发软删，下轮上报自愈
@@ -203,10 +211,10 @@ public class RelationsIngestService {
             } else if (conversationMapper.update(null, new LambdaUpdateWrapper<WxConversationEntity>()
                     .eq(WxConversationEntity::getId, existing.getId())
                     .set(WxConversationEntity::getIsGroup, Boolean.TRUE.equals(item.isGroup()))
-                    .set(WxConversationEntity::getDisplayName, item.displayName())
-                    .set(WxConversationEntity::getLastMessageAt, item.lastMessageAt())
-                    .set(WxConversationEntity::getMessageCount, item.messageCount())
-                    .set(WxConversationEntity::getUnread, item.unread())
+                    .set(item.displayName() != null, WxConversationEntity::getDisplayName, item.displayName())
+                    .set(item.lastMessageAt() != null, WxConversationEntity::getLastMessageAt, item.lastMessageAt())
+                    .set(item.messageCount() != null, WxConversationEntity::getMessageCount, item.messageCount())
+                    .set(item.unread() != null, WxConversationEntity::getUnread, item.unread())
                     .set(WxConversationEntity::getUpdatedAt, OffsetDateTime.now())) == 1) {
                 count++;
             }   // 0 行命中 = 并发软删，下轮上报自愈
@@ -248,8 +256,8 @@ public class RelationsIngestService {
             } else {
                 groupMemberMapper.update(null, new LambdaUpdateWrapper<WxGroupMemberRelEntity>()
                         .eq(WxGroupMemberRelEntity::getId, existing.getId())
-                        .set(WxGroupMemberRelEntity::getNickName, item.nickName())
-                        .set(WxGroupMemberRelEntity::getRemark, item.remark())
+                        .set(item.nickName() != null, WxGroupMemberRelEntity::getNickName, item.nickName())
+                        .set(item.remark() != null, WxGroupMemberRelEntity::getRemark, item.remark())
                         .set(WxGroupMemberRelEntity::getIsOwner, Boolean.TRUE.equals(item.isOwner())));
             }
             count++;
@@ -286,9 +294,9 @@ public class RelationsIngestService {
             } else {
                 labelDictMapper.update(null, new LambdaUpdateWrapper<WxLabelDictEntity>()
                         .eq(WxLabelDictEntity::getId, existing.getId())
-                        .set(WxLabelDictEntity::getSortOrder, item.sortOrder())
+                        .set(item.sortOrder() != null, WxLabelDictEntity::getSortOrder, item.sortOrder())
                         .set(WxLabelDictEntity::getSource, source)
-                        .set(WxLabelDictEntity::getMemberCount, item.memberCount())
+                        .set(item.memberCount() != null, WxLabelDictEntity::getMemberCount, item.memberCount())
                         .set(WxLabelDictEntity::getUpdatedAt, OffsetDateTime.now()));
             }
             count++;
@@ -355,7 +363,7 @@ public class RelationsIngestService {
         }
         labelHintMapper.update(null, new LambdaUpdateWrapper<WxLabelMemberHintEntity>()
                 .eq(WxLabelMemberHintEntity::getId, existing.getId())
-                .set(WxLabelMemberHintEntity::getMemberUsername, username)
+                .set(username != null, WxLabelMemberHintEntity::getMemberUsername, username)
                 .set(WxLabelMemberHintEntity::getIsAmbiguous, ambiguous));
     }
 
