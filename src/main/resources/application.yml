@@ -1,0 +1,132 @@
+server:
+  port: 8080
+
+# P1-③ admin bootstrap 开关：环境变量 WXUW_BOOTSTRAP_SEED 优先，缺省空 = 禁用（AdminBootstrap）
+# 非空且 wx_account 无任何行时，启动期注册 dev 账号并签发 admin 令牌对（打印到日志，仅 dev 用）
+wx-sync:
+  bootstrap-token-seed: ${WXUW_BOOTSTRAP_SEED:}
+  # T5 追加：blob 内容寻址文件库根目录（相对运行目录；两级分桶 <aa>/<bb>/<sha256>，
+  # 字节不进 PG，SYNCH_PLAN §9.4；env WXUW_BLOB_ROOT 优先）
+  blob-root: ${WXUW_BLOB_ROOT:./data/blobs}
+  # T5 追加：单文件字节上限（API_DESIGN §4.4 默认 512MB，超限 10505）
+  blob-max-bytes: 536870912
+  # T9 追加：任务分发参数（TASK_DISPATCH §4/§10）
+  task-lease-seconds: 600            # 租约时长；长任务靠客户端按 lease/3 主动 renew（§7）
+  task-materialize-batch-cap: 20     # 单计划单轮物化产出上限（任务风暴兜底，§10）
+  task-full-scan-batch: 5            # FULL_SCAN '*' 轮转：每账号每轮取「最久未全扫」会话数（§4.3）
+  # T10 追加：订阅投递参数（SUBSCRIPTION_DESIGN §5.3/§8）
+  sub-webhook-workers: 8             # webhook worker 池大小（§8：p50 200ms → 40 QPS，4 倍余量）
+  sub-dispatch-batch: 8              # 每轮 dispatch 认领上限（= 空闲 worker 数，拨轮 200ms）
+  sub-per-sub-inflight: 4            # 同订阅在飞上限（PARALLEL 也生效——挂死消费者最多占 4 席，§5.3 v1.1）
+  sub-delivered-retention-days: 30   # DELIVERED 行保留天数（§8 清理口径）
+  sub-cleanup-batch: 5000            # 每轮清理删除上限（部分索引批删，§8）
+
+spring:
+  application:
+    # 必配：framework4j 的 Redis key 前缀（accesstoken / id / tracelog）依赖它
+    name: wechat-sync-server
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:5433/wechat
+    username: postgres
+    password: wxuw
+    driver-class-name: org.postgresql.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+
+# framework4j 配置：键一律 framework4j.<module>.*，唯一 kebab-case 例外是 access-token.*
+framework4j:
+  # 默认激活，显式写出便于排查
+  web:
+    enabled: true
+  api:
+    trace:
+      enabled: true
+      header-name: X-Trace-Id
+      mdc-key: traceId
+  # 默认激活（OffsetDateTime ISO-8601 序列化 + 时间入参多格式转换器）
+  datetime:
+    enabled: true
+  # v1.8 起显式启用；ID 由雪花生成器在服务层注入
+  id:
+    enabled: true
+    worker:
+      strategy: redis
+      fallback-to-ip: true
+    mybatis:
+      enabled: true
+  # 多 Redis 数据源（T2 追加）：MultiRedisAutoConfiguration 按需开启；
+  # accesstoken 的 accessTokenStringRedisTemplate 依赖 MultiRedisManager（T1 冒烟 RED 根因）
+  redis:
+    enabled: true
+    datasources:
+      default:
+        host: 127.0.0.1
+        port: 6379
+        template-type: string
+  # 鉴权：JWT + Redis 会话双信任
+  access-token:
+    enabled: true
+    redis-name: default
+    # P2 硬化：环境变量优先（WXUW_TOKEN_SECRET），冒号后为本地默认兜底值（保证离线/缺省仍能启动）；
+    # 生产必须注入环境变量，不得沿用兜底值
+    secret-key: ${WXUW_TOKEN_SECRET:f2e9a3a5aaffba8030c076a211697bf040529577be0a88d32bb61dbfba16b272}
+    # T2 追加：会话 Redis key 哈希加盐（AccessTokenConfigValidator 启动期 fail-fast 必填，缺省空串会拒启）
+    hash-salt: 7b1d4e9a2c6f8350b4e1a7d9c3f58026
+    policies:
+      client:
+        key: [account]
+        expire-time: 7776000      # access TTL 90d（API_DESIGN §6 ttl_seconds 缺省 7776000）
+        max-usage: -1
+        auto-renew: true
+        renew-increment: 1800
+      admin:
+        key: [uid]
+        expire-time: 7200         # access TTL 2h
+        max-usage: -1
+        auto-renew: true
+        renew-increment: 1800
+  # Idempotency-Key 幂等（写接口 48h 重放返回同一响应）
+  # T7 接线（P1 修复）：path-patterns 原缺省 /api/**，/v1/** 根本不进拦截器（幂等形同虚设）；
+  # 收窄到 JSON 上报族，与 IdempotencyWiringConfig.URL_PATTERN（Filter 的 /v1/reports/*）同向——
+  # 拦截器命中路径必须被 body 缓存 Filter 覆盖，否则 hashBody 走 fail-secure 抛 IOException → 500。
+  # /v1/blobs/** 刻意不进 pattern：① PUT 内容寻址（sha256 即地址）+ append-only，重复 PUT 在
+  #   wx_blob 查重处幂等返回 exists，天然幂等，无需 Idempotency-Key；
+  # ② 不进 pattern 就不进 IdempotencyBodyCacheFilter（非 multipart 的 512MB octet-stream
+  #   否则会被整读进堆，OOM），字节全程流式落盘。
+  idempotency:
+    enabled: true
+    ttl-seconds: 172800
+    path-patterns:
+      - /v1/reports/**
+  # Lua 滑动窗口限流（默认激活；各接口配额在 Controller @RateLimit 上声明）
+  rate-limit:
+    enabled: true
+    default-limit: 120            # API_DESIGN §9 查询接口 120 次/分钟
+    default-window: "1m"
+    default-scope: ip
+    redis-name: default
+    # SUBSCRIPTION_DESIGN §6 v1.1 三件套之一：把订阅 POLL 域放行出框架缺省 120 档
+    # （否则 600/min 形同虚设——消费者按 SQS 式轮询拉取需要更高配额）；放宽档由
+    # RateLimitQuotaConfig.QuotaInterceptor 前缀档 600 接管（三件套之二）
+    whitelist-paths:
+      - /v1/subscriptions/**
+  # SQL 语句 trace_id 前缀（默认激活）
+  datasource:
+    sql-tracing:
+      enabled: true
+      mode: ALL
+      topic: wechat-sync-server

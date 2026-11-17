@@ -1,0 +1,67 @@
+{
+  "started_at": 1794296978,
+  "chat": "t10_accept_chat_1794296978",
+  "ids": {
+    "consumer_id": "378451121158717440",
+    "sub_poll_id": "378451121397792768",
+    "sub_hook_id": "378451124677738496"
+  },
+  "results": [
+    {
+      "step": "A 建消费者",
+      "ok": true,
+      "detail": "code=0 consumer_id=378451121158717440 poll_token=有 webhook_secret=有"
+    },
+    {
+      "step": "B 建 POLL 订阅",
+      "ok": true,
+      "detail": "code=0 sub_id=378451121397792768 mode=POLL filter={\"chats\":[\"t10_accept_chat_1794296978\"]}"
+    },
+    {
+      "step": "C 建 WEBHOOK 订阅",
+      "ok": true,
+      "detail": "code=0 sub_id=378451124677738496 mode=WEBHOOK url=https://httpbin.org/post"
+    },
+    {
+      "step": "D SSRF 环回拦截",
+      "ok": true,
+      "detail": "code=10607 msg=webhook_url 非法: http://127.0.0.1:9/ssrf-probe（端口仅允许 80/443，收到 9）"
+    },
+    {
+      "step": "E 上报消息（ingest 触发订阅）",
+      "ok": true,
+      "detail": "code=0 msg=操作成功 results=10 inserted=10/10"
+    },
+    {
+      "step": "F 重复上报不新增投递",
+      "ok": true,
+      "detail": "二次 inserted=0 poll 0->0 hook 0->0"
+    },
+    {
+      "step": "G1 POLL 拉取",
+      "ok": true,
+      "detail": "拉到 10/10 条（visibility_seconds=60）"
+    },
+    {
+      "step": "G2 POLL ack",
+      "ok": true,
+      "detail": "code=0 成功 10/10"
+    },
+    {
+      "step": "H WEBHOOK 派发",
+      "ok": true,
+      "detail": "DELIVERED=10/10 response_code=[200] 其它状态=[]"
+    },
+    {
+      "step": "I1 50 并发拉取",
+      "ok": true,
+      "detail": "耗时 0.36s → 140.6 QPS；非零信封 0 条"
+    },
+    {
+      "step": "I2 10 QPS 持续 5 秒",
+      "ok": true,
+      "detail": "发出 51 请求 / 5.01s = 10.2 QPS，失败 0，信封码 [0]"
+    }
+  ],
+  "failed": []
+}

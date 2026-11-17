@@ -1,0 +1,36 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### IDE ###
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+.classpath
+.project
+.settings/
+.factorypath
+
+### Logs / temp ###
+*.log
+logs/
+*.tmp
+*.bak
+
+### OS ###
+.DS_Store
+Thumbs.db
+
+### Blob 文件库（wx-sync.blob-root 缺省 ./data/blobs，内容寻址字节，体积不可控） ###
+data/
+
+### 本地测试 token / 凭据（.t9_* .t10_*）###
+.t9_*
+.t10_*
+
+### Python ###
+__pycache__/
+*.pyc

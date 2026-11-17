@@ -1,0 +1,25 @@
+# ===================================================================== 生产 profile（T7 加固）
+# 启用：--spring.profiles.active=prod。只写「与缺省值不同」的键，其余沿用 application.yml。
+#
+# 环境变量注入（生产必须显式注入，缺省兜底值仅保证本地能启动，不得沿用）：
+#   WXUW_TOKEN_SECRET     JWT 签名密钥（≥32 字符；access-token.secret-key 已是 ${WXUW_TOKEN_SECRET:...}）
+#   WXUW_BLOB_ROOT        blob 文件库根目录（建议独立数据盘，如 /data/wx-sync/blobs）
+#   WXUW_BOOTSTRAP_SEED   ⚠ 生产严禁设置：非空 + wx_account 为空时会注册 dev 账号并把
+#                         admin 令牌对打印进日志（AdminBootstrap，config/AdminBootstrap.java）
+#   WXUW_PG_PASSWORD      数据库口令——当前 application.yml 是明文 wxuw，生产可临时以
+#     spring.datasource.password: ${WXUW_PG_PASSWORD:wxuw}   覆盖（解开本行注释即生效）
+#   Redis 口令/内网地址同理：framework4j.redis.datasources.default.host|port、spring.data.redis.*
+# 另： hash-salt（会话 key 加盐）在 application.yml 里是固定值，生产建议改 env 注入后再上线。
+
+springdoc:
+  # 生产不暴露 OpenAPI/Swagger（§5 契约评审只在 dev/test 开）
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+framework4j:
+  rate-limit:
+    # 缺省白名单含 127.0.0.1/::1（本机自测豁免）。生产清空，§9 配额才真正生效——
+    # 反向代理在同一台机器时，remoteAddr 是回环地址，保留豁免会让全部流量绕过限流。
+    whitelist-ips: []

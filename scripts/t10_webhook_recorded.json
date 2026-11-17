@@ -1,0 +1,58 @@
+[
+  {
+    "method": "GET",
+    "path": "/probe",
+    "headers": {
+      "Host": "127.0.0.1:8899",
+      "User-Agent": "curl/8.21.0",
+      "Accept": "*/*"
+    },
+    "body": "",
+    "body_len": 0
+  },
+  {
+    "method": "POST",
+    "path": "http://httpbin.org/post",
+    "headers": {
+      "Content-Length": "431",
+      "Host": "httpbin.org",
+      "User-Agent": "Java-http-client/17.0.19",
+      "Content-Type": "application/json",
+      "X-WxSync-Delivery": "142",
+      "X-WxSync-Signature": "sha256=5a8c5f47ce46cfbf16ca6498d2f39c2ae4b76d2438061c6012b53f877a65ef28",
+      "X-WxSync-Timestamp": "1794297312"
+    },
+    "body": "{\"delivery_id\":\"142\",\"subscription_id\":\"378452471212916736\",\"consumer_id\":\"378452466943115264\",\"attempt\":1,\"timestamp\":\"1794297312\",\"message\":{\"id\":\"378452471758176256\",\"dedup_key\":\"srv:9894297299\",\"chat_username\":\"t10_hook_chat_1794297299\",\"is_group\":false,\"sender_username\":\"t10_hook_sender\",\"type_code\":\"1\",\"type_name\":\"TEXT\",\"body\":\"t10hook 1794297299 proof\",\"create_time_raw\":\"1794297300\",\"is_revoked\":false,\"attachments\":[]}}",
+    "body_len": 431
+  },
+  {
+    "method": "POST",
+    "path": "http://httpbin.org/post",
+    "headers": {
+      "Content-Length": "431",
+      "Host": "httpbin.org",
+      "User-Agent": "Java-http-client/17.0.19",
+      "Content-Type": "application/json",
+      "X-WxSync-Delivery": "143",
+      "X-WxSync-Signature": "sha256=25c1a22ea3589d80103457050c9ea87540d1f8bdff1e08ed07d7251adca36792",
+      "X-WxSync-Timestamp": "1794297374"
+    },
+    "body": "{\"delivery_id\":\"143\",\"subscription_id\":\"378452616201617408\",\"consumer_id\":\"378452616096759808\",\"attempt\":1,\"timestamp\":\"1794297373\",\"message\":{\"id\":\"378452616277114880\",\"dedup_key\":\"srv:9894297334\",\"chat_username\":\"t10_hook_chat_1794297334\",\"is_group\":false,\"sender_username\":\"t10_hook_sender\",\"type_code\":\"1\",\"type_name\":\"TEXT\",\"body\":\"t10hook 1794297334 proof\",\"create_time_raw\":\"1794297335\",\"is_revoked\":false,\"attachments\":[]}}",
+    "body_len": 431
+  },
+  {
+    "method": "POST",
+    "path": "http://httpbin.org/post",
+    "headers": {
+      "Content-Length": "431",
+      "Host": "httpbin.org",
+      "User-Agent": "Java-http-client/17.0.19",
+      "Content-Type": "application/json",
+      "X-WxSync-Delivery": "144",
+      "X-WxSync-Signature": "sha256=d586d841eb2888f07d8f997e27594b1b74f792c3f2643171e8b031d43a4b3e43",
+      "X-WxSync-Timestamp": "1794297432"
+    },
+    "body": "{\"delivery_id\":\"144\",\"subscription_id\":\"378452963410296832\",\"consumer_id\":\"378452960004521984\",\"attempt\":1,\"timestamp\":\"1794297432\",\"message\":{\"id\":\"378452963506765824\",\"dedup_key\":\"srv:9894297416\",\"chat_username\":\"t10_hook_chat_1794297416\",\"is_group\":false,\"sender_username\":\"t10_hook_sender\",\"type_code\":\"1\",\"type_name\":\"TEXT\",\"body\":\"t10hook 1794297416 proof\",\"create_time_raw\":\"1794297417\",\"is_revoked\":false,\"attachments\":[]}}",
+    "body_len": 431
+  }
+]
