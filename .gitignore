@@ -34,3 +34,5 @@ data/
 ### Python ###
 __pycache__/
 *.pyc
+
+.t11_*
