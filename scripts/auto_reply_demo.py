@@ -162,7 +162,8 @@ def watch_tasks(admin, account, watched):
     if not watched:
         return
     code, data, _ = admin.call("GET", f"/v1/tasks?page=1&page_size=100&account={account}")
-    rows = {int(r["id"]): r for r in ((data or {}).get("list") or [])} if code == 0 else {}
+    # 键统一 str：create 返回的 task id 是字符串，list 行 id 可能字符串/数字混型
+    rows = {str(r["id"]): r for r in ((data or {}).get("list") or [])} if code == 0 else {}
     for tid in list(watched):
         row = rows.get(tid)
         if not row:
