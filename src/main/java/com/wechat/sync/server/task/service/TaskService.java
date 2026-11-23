@@ -676,9 +676,19 @@ public class TaskService {
         return json;
     }
 
-    /** SEND_MESSAGE chat_username 的接受面（镜像 wechatauto resolve_chat：这三类形态可被定位）。 */
+    /**
+     * SEND_MESSAGE chat_username 的接受面：{@code @chatroom} 后缀 + WeChat id 通用形态
+     * {@code ^[A-Za-z][A-Za-z0-9_-]{3,63}$}。v1 的三形态白名单
+     * （{@code @chatroom}/{@code filehelper}/{@code wxid_} 前缀）把老式自定义 id 挡在门外
+     * （live 2026-11-23: 用户 p5soft/朱家田 的会话触发回复即 10102）——而客户端按显示名
+     * 解析目标（群名/备注/昵称回退），并不要求 wxid_ 前缀。防呆底线：拒绝空白/点号/
+     * 数字开头/超长等明显非 id 形态。
+     */
     private static boolean isAddressableChat(String chat) {
-        return chat.endsWith("@chatroom") || "filehelper".equals(chat) || chat.startsWith("wxid_");
+        if (chat.endsWith("@chatroom")) {
+            return true;
+        }
+        return chat.matches("^[A-Za-z][A-Za-z0-9_-]{3,63}$");
     }
 
     /**
@@ -686,7 +696,8 @@ public class TaskService {
      * （未知键 10102——防拼写错误静默失效，SubscriptionFilter 同哲学）。
      * <ul>
      *   <li>{@code chat_username}：必填，trim 后非空且 ≤64，形态必须可被客户端定位
-     *       （{@code @chatroom} 后缀 / {@code filehelper} / {@code wxid_} 前缀）；</li>
+     *       （{@code @chatroom} 后缀，或字母开头的 WeChat id——wxid_ 前缀、filehelper、
+     *       gh_ 公众号、老式自定义 id 同属 {@code ^[A-Za-z][A-Za-z0-9_-]{3,63}$}）；</li>
      *   <li>{@code text}：必填，trim 后长度 1..2000（<b>存储保留原文不 trim</b>——首尾空白
      *       可能是发送意图的一部分，校验才用 trim）。</li>
      * </ul>
@@ -723,7 +734,7 @@ public class TaskService {
         }
         if (!isAddressableChat(chat)) {
             throw new ApiException(ApiCode.PARAM_FORMAT_ERROR,
-                    "SEND_MESSAGE chat_username 形态不可定位（仅支持 @chatroom 后缀 / filehelper / wxid_ 前缀）: "
+                    "SEND_MESSAGE chat_username 形态不可定位（@chatroom 后缀，或字母开头的 WeChat id 形态）: "
                             + chat);
         }
         JsonNode textNode = node.get("text");

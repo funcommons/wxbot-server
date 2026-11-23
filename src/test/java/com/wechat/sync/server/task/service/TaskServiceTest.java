@@ -41,6 +41,7 @@ import static org.assertj.core.groups.Tuple.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
@@ -706,12 +707,35 @@ class TaskServiceTest {
     void createSendMessageTaskRejectsUnaddressableChatForm() {
         stubAccountExists();
 
+        // 数字开头 / 含空格 / 含点号——明显非 WeChat id 形态仍拒绝
         assertPayloadRejected(
-                () -> service.createTask(ACCOUNT, TaskService.TT_SEND_MESSAGE, "random_group", 0,
-                        sendMessagePayload("random_group", "ok"), 3),
-                "chat_username", "random_group");
+                () -> service.createTask(ACCOUNT, TaskService.TT_SEND_MESSAGE, "1chat", 0,
+                        sendMessagePayload("1chat", "ok"), 3),
+                "chat_username", "1chat");
+        assertPayloadRejected(
+                () -> service.createTask(ACCOUNT, TaskService.TT_SEND_MESSAGE, "bad chat", 0,
+                        sendMessagePayload("bad chat", "ok"), 3),
+                "chat_username", "bad chat");
+        assertPayloadRejected(
+                () -> service.createTask(ACCOUNT, TaskService.TT_SEND_MESSAGE, "foo.bar", 0,
+                        sendMessagePayload("foo.bar", "ok"), 3),
+                "chat_username", "foo.bar");
 
         verifyNoInteractions(taskMapper);
+    }
+
+    /** 老式自定义 id（无 wxid_ 前缀）可下发——live 2026-11-23: p5soft/朱家田 触发回复被 10102 挡。 */
+    @Test
+    void createSendMessageTaskAcceptsLegacyCustomId() {
+        stubAccountExists();
+        stubInsertAccepted();
+
+        long id = service.createTask(ACCOUNT, TaskService.TT_SEND_MESSAGE, "p5soft", 0,
+                sendMessagePayload("p5soft", "好的"), 3);
+
+        assertThat(id).isEqualTo(TASK_ID);
+        verify(taskMapper).insertTaskIgnoreReturnIdMax(eq(TaskService.TT_SEND_MESSAGE), eq(ACCOUNT),
+                eq("p5soft"), eq(0), anyString(), isNull(), eq(3));
     }
 
     @Test

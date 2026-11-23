@@ -139,6 +139,7 @@ def cmd_setup(a):
 # ---------------------------------------------------------------- 主循环
 
 SUBMIT_CONFLICT_CODES = {10106}   # 数据约束冲突 ≈ 同会话已有在途 SEND_MESSAGE（active_target 唯一）
+SUBMIT_PERMANENT_CODES = {10102}  # 目标形态被服务端校验拒绝——重试永远不成功，ack 跳过
 
 
 def submit_reply_task(admin, account, chat, match, reply, watched):
@@ -152,6 +153,9 @@ def submit_reply_task(admin, account, chat, match, reply, watched):
         return "ack"
     if code in SUBMIT_CONFLICT_CODES:
         log("跳过", f"chat={chat} 已有在途回复任务（active_target 唯一约束），本条放弃 code={code}")
+        return "ack"
+    if code in SUBMIT_PERMANENT_CODES:
+        log("跳过", f"chat={chat} 目标形态被服务端拒绝（10102），本条放弃（消息已入库可查）")
         return "ack"
     log("失败", f"建任务失败 chat={chat} code={code} {json.dumps(env, ensure_ascii=False)[:200]} → nack 重试")
     return "nack"
