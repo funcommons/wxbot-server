@@ -89,7 +89,6 @@ async function loadChats() {
 
 async function openChat(row: ChatRow) {
   activeChat.value = row.username
-  msgPage.value = 1
   msgOpen.value = true
   await loadMsgs(false)
 }

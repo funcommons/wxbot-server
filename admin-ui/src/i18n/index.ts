@@ -49,6 +49,10 @@ const zh = {
   col: {
     id: 'ID', actions: '操作', status: '状态', name: '名称', mode: '模式', value: '值', remark: '备注',
   },
+  dlv: {
+    title: '投递', titleOf: '投递明细：{name}', requeueDead: '死信重排', redeliver: '重投',
+    responseCode: '响应码', redeliverOk: '已重投（新投递行生成）', requeueOk: '已重排 {n} 条死信',
+  },
   task: {
     title: '任务管理', type: '类型', target: '目标', attempts: '尝试', payload: '载荷',
     runs: '执行历史', runsTitle: '执行历史：任务 {id}', reset: '重置', cancelOk: '任务已取消',
@@ -110,6 +114,10 @@ const en = {
   },
   col: {
     id: 'ID', actions: 'Actions', status: 'Status', name: 'Name', mode: 'Mode', value: 'Value', remark: 'Remark',
+  },
+  dlv: {
+    title: 'Deliveries', titleOf: 'Deliveries: {name}', requeueDead: 'Requeue dead', redeliver: 'Redeliver',
+    responseCode: 'Resp code', redeliverOk: 'Redelivered (new delivery row)', requeueOk: 'Requeued {n} dead',
   },
   task: {
     title: 'Tasks', type: 'Type', target: 'Target', attempts: 'Attempts', payload: 'Payload',

@@ -139,3 +139,53 @@ curl -s -H "Authorization: Bearer $ADMIN_TOKEN" http://127.0.0.1:8080/v1/status
 `query/` 查询 API · `status/` 运维观测 · `subscription/` 订阅域（消费者/订阅/投递/派发器/调度）·
 `common/` 错误码与分页 · `config/` 框架接线（MP 分页 / bootstrap / 幂等 filter / §9 限流配额）。
 实体↔列名以 `../schema.sql` 为权威；响应一律 HTTP 200 信封（限流与 blob 字节流除外）。
+
+
+---
+
+## admin 管理台（admin-ui）
+
+Vue 3 + TypeScript + Vite + Element Plus + **Fc SDK 组件库**（`admin-ui/src/components/sdk/`，
+颜色/圆角/阴影全走 token，业务 0 行颜色 CSS）。History 路由挂 `/admin/` 基座，zh/en 双语，
+mchuan 品牌 + light/dark/orange-black 配色可切换。
+
+### 功能
+
+| 页面 | 能力 |
+|---|---|
+| 概览 | 账号/消费者/订阅/会话计数，登录令牌状态 |
+| 订阅管理 | 列表（按消费者筛）、新建（POLL/WEBHOOK + filter JSON）、启停、删除、投递明细（状态筛/重投/死信重排） |
+| 消费者管理 | 列表、新建（明文 poll_token/webhook_secret 仅此一次展示）、删除 |
+| Token 管理 | 账号列表、签发令牌对（show-once）、注册账号；注册码签发/列表/作废 |
+| 任务管理 | 状态筛选、执行历史（task-runs 回执）、DEAD 重置、取消 |
+| 消息浏览 | 会话列表（wx_message 聚合，C++ 客户端无会话层时兜底）→ 游标分页消息流 |
+
+### 登录
+
+固定 admin token，写在 `application.yml`：
+
+```yaml
+wx-sync:
+  admin-ui-token: ${WXUW_ADMIN_UI_TOKEN:wxbot-admin-2026}   # 生产务必改/覆盖
+```
+
+登录页粘贴该串即可——服务端过滤器（`AdminUiStaticTokenFilter`）将其透明兑换为真实
+admin JWT 并自动续签，前端无刷新动作。脚本侧（admin_token.py / auto_reply_demo.py）
+持各自真实 JWT，不受影响。
+
+### 构建与部署
+
+```bash
+cd admin-ui
+npm install
+npm run deploy        # = vite build + 拷贝 dist → ../src/main/resources/static/admin/
+mvn package && java -jar target/wechat-sync-server-0.1.0-SNAPSHOT.jar
+# 打开 http://127.0.0.1:8080/admin/
+```
+
+开发调试：`npm run dev`（vite 代理 /v1 → 8080）。改动前端只需 `npm run deploy` +
+重打 jar（产物已入库，同 wxbot-helper web_assets 先例）。
+
+### 无人值守登录深链
+
+`/admin/dashboard?token=<固定串>` 自动登录（query 即刻剥离，不留在地址栏）。

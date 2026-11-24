@@ -37,8 +37,9 @@
             <FcSwitch :model-value="isEnabled(row)" @update:model-value="((v: string | number | boolean) => toggle(row, Boolean(v)))" />
           </template>
         </el-table-column>
-        <el-table-column :label="t('col.actions')" fixed="right" width="90">
+        <el-table-column :label="t('col.actions')" fixed="right" width="140">
           <template #default="{ row }">
+            <FcButton variant="text" size="sm" @click="openDeliveries(row)">{{ t('dlv.title') }}</FcButton>
             <FcButton variant="text" size="sm" color="danger" @click="onDelete(row)">{{ t('common.delete') }}</FcButton>
           </template>
         </el-table-column>
@@ -46,6 +47,44 @@
       <FcPagination v-model:current-page="page" v-model:page-size="pageSize" :total="total"
                     style="margin-top: 12px; justify-content: flex-end" @change="load" />
     </FcSection>
+
+    <!-- 投递明细 -->
+    <FcDrawer v-model:open="dlvOpen" :title="t('dlv.titleOf', { name: dlvSubName })" width="820px" append-to-body>
+      <FcFilterBar>
+        <FcSegmented v-model="dlvStatus" :options="dlvStatusOptions" @change="dlvPage = 1; loadDeliveries()" />
+        <FcButton variant="secondary" size="sm" @click="onRequeueDead">{{ t('dlv.requeueDead') }}</FcButton>
+      </FcFilterBar>
+      <FcTable :data="deliveries" :loading="dlvLoading" stripe>
+        <el-table-column label="ID" width="110">
+          <template #default="{ row }"><span class="mono">{{ row.id }}</span></template>
+        </el-table-column>
+        <el-table-column :label="t('col.status')" width="120">
+          <template #default="{ row }">
+            <FcTag :color="dlvColor(row.status)" size="sm">{{ row.status }}</FcTag>
+          </template>
+        </el-table-column>
+        <el-table-column :label="t('task.attempts')" width="90">
+          <template #default="{ row }">{{ row.attempts }}/{{ row.max_attempts }}</template>
+        </el-table-column>
+        <el-table-column :label="t('dlv.responseCode')" width="110">
+          <template #default="{ row }">{{ row.response_code ?? '—' }}</template>
+        </el-table-column>
+        <el-table-column :label="t('task.error')" min-width="140" show-overflow-tooltip>
+          <template #default="{ row }">{{ row.error || '—' }}</template>
+        </el-table-column>
+        <el-table-column :label="t('tok.expiresAt')" width="160">
+          <template #default="{ row }">{{ fmtTime(row.delivered_at || row.next_attempt_at || row.created_at) }}</template>
+        </el-table-column>
+        <el-table-column :label="t('col.actions')" fixed="right" width="90">
+          <template #default="{ row }">
+            <FcButton v-if="row.status === 'DELIVERED'" variant="text" size="sm"
+                      @click="onRedeliver(row)">{{ t('dlv.redeliver') }}</FcButton>
+          </template>
+        </el-table-column>
+      </FcTable>
+      <FcPagination v-model:current-page="dlvPage" v-model:page-size="dlvPageSize" :total="dlvTotal"
+                    style="margin-top: 12px; justify-content: flex-end" @change="loadDeliveries" />
+    </FcDrawer>
 
     <!-- 新建订阅 -->
     <FcDialog v-model:open="createOpen" :title="t('sub.create')" width="560px" append-to-body>
@@ -93,6 +132,12 @@ import {
   FcPagination, FcDialog, FcFormItem, FcInput, FcSegmented,
 } from '@/components/sdk'
 import { get, post, put, del } from '@/api/client'
+
+interface DeliveryRow {
+  id: string; status: string; attempts?: number; max_attempts?: number
+  response_code?: number; error?: string; delivered_at?: string
+  next_attempt_at?: string; created_at?: string
+}
 import type { PageVO, SubscriptionVO, ConsumerVO } from '@/api/types'
 
 const { t } = useI18n()
@@ -205,6 +250,73 @@ async function onDelete(row: SubscriptionVO) {
     await del(`/v1/subscriptions/${row.id}`)
     ElMessage.success(t('sub.deletedOk'))
     await load()
+  } catch (e) {
+    ElMessage.error((e as Error).message || t('err.reqFail'))
+  }
+}
+
+// ---- 投递明细 ----
+const dlvOpen = ref(false)
+const dlvLoading = ref(false)
+const dlvSubId = ref('')
+const dlvSubName = ref('')
+const dlvStatus = ref('')
+const dlvPage = ref(1)
+const dlvPageSize = ref(20)
+const dlvTotal = ref(0)
+const deliveries = ref<DeliveryRow[]>([])
+
+const dlvStatusOptions = [
+  { label: t('common.all'), value: '' },
+  { label: 'PENDING', value: 'PENDING' },
+  { label: 'DELIVERED', value: 'DELIVERED' },
+  { label: 'DEAD', value: 'DEAD' },
+]
+
+function dlvColor(s: string) {
+  return s === 'DELIVERED' ? 'success' : s === 'DEAD' ? 'danger' : s === 'PENDING' ? 'gray' : 'warning'
+}
+function fmtTime(v?: string) { return v ? v.replace('T', ' ').slice(0, 19) : '—' }
+
+function openDeliveries(row: SubscriptionVO) {
+  dlvSubId.value = row.id
+  dlvSubName.value = row.name || row.id
+  dlvStatus.value = ''
+  dlvPage.value = 1
+  dlvOpen.value = true
+  loadDeliveries()
+}
+
+async function loadDeliveries() {
+  dlvLoading.value = true
+  try {
+    const q = new URLSearchParams({ page: String(dlvPage.value), page_size: String(dlvPageSize.value) })
+    if (dlvStatus.value) q.set('status', dlvStatus.value)
+    const data = await get<PageVO<DeliveryRow>>(`/v1/subscriptions/${dlvSubId.value}/deliveries?${q}`)
+    deliveries.value = data.list
+    dlvTotal.value = data.total
+  } catch (e) {
+    ElMessage.error((e as Error).message || t('err.reqFail'))
+  } finally {
+    dlvLoading.value = false
+  }
+}
+
+async function onRedeliver(row: DeliveryRow) {
+  try {
+    await post(`/v1/subscriptions/deliveries/${row.id}/redeliver`)
+    ElMessage.success(t('dlv.redeliverOk'))
+    await loadDeliveries()
+  } catch (e) {
+    ElMessage.error((e as Error).message || t('err.reqFail'))
+  }
+}
+
+async function onRequeueDead() {
+  try {
+    const n = await post<number>(`/v1/subscriptions/${dlvSubId.value}/requeue-dead`)
+    ElMessage.success(t('dlv.requeueOk', { n: n ?? 0 }))
+    await loadDeliveries()
   } catch (e) {
     ElMessage.error((e as Error).message || t('err.reqFail'))
   }
