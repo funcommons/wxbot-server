@@ -1,0 +1,1 @@
+import{d as o,c as s,s as r,p as t,o as c,_ as l}from"./index-BKToJpHK.js";const n=o({name:"FcFilterBar",__name:"FcFilterBar",props:{block:{type:Boolean,default:!1}},setup(e){return(a,i)=>(c(),s("div",{class:r(["fc-filter-bar",{"is-block":e.block}])},[t(a.$slots,"default",{},void 0,!0)],2))}}),f=l(n,[["__scopeId","data-v-e72e9f3c"]]);export{f as F};

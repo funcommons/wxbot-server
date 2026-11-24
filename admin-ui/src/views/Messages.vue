@@ -31,8 +31,12 @@
           </template>
         </el-table-column>
       </FcTable>
-      <FcPagination v-model:current-page="msgPage" v-model:page-size="msgPageSize" :total="msgTotal"
-                    style="margin-top: 12px; justify-content: flex-end" @change="loadMsgs" />
+      <div class="load-more">
+        <FcButton variant="secondary" size="sm" :loading="loadingMsgs"
+                  :disabled="!msgHasMore" @click="loadMsgs">
+          {{ msgHasMore ? t('msg.loadMore') : t('msg.noMore') }}
+        </FcButton>
+      </div>
     </FcDrawer>
   </div>
 </template>
@@ -65,9 +69,8 @@ const msgOpen = ref(false)
 const loadingMsgs = ref(false)
 const activeChat = ref('')
 const msgs = ref<MsgRow[]>([])
-const msgPage = ref(1)
-const msgPageSize = ref(50)
-const msgTotal = ref(0)
+const msgCursor = ref('')
+const msgHasMore = ref(false)
 
 function fmt(v?: string) { return v ? v.replace('T', ' ').slice(0, 19) : '—' }
 
@@ -88,19 +91,19 @@ async function openChat(row: ChatRow) {
   activeChat.value = row.username
   msgPage.value = 1
   msgOpen.value = true
-  await loadMsgs()
+  await loadMsgs(false)
 }
 
-async function loadMsgs() {
+// 游标分页（keyset 倒序：先到的是最新消息），加载更多向尾部追加
+async function loadMsgs(append = false) {
   loadingMsgs.value = true
   try {
-    const q = new URLSearchParams({
-      chatUsername: activeChat.value,
-      page: String(msgPage.value), pageSize: String(msgPageSize.value),
-    })
-    const data = await get<PageVO<MsgRow>>(`/v1/messages?${q}`)
-    msgs.value = data.list
-    msgTotal.value = data.total
+    const q = new URLSearchParams({ chatUsername: activeChat.value, limit: '50' })
+    if (append && msgCursor.value) q.set('cursor', msgCursor.value)
+    const data = await get<{ list: MsgRow[]; next_cursor?: string; has_more?: boolean }>(`/v1/messages?${q}`)
+    msgs.value = append ? [...msgs.value, ...(data.list || [])] : (data.list || [])
+    msgCursor.value = data.next_cursor || ''
+    msgHasMore.value = Boolean(data.has_more)
   } catch {
     ElMessage.error(t('err.reqFail'))
   } finally {

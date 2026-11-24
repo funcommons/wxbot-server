@@ -78,6 +78,20 @@ public class QueryService {
                         .eq(WxConversationEntity::getIsDeleted, 0)
                         .orderByDesc(WxConversationEntity::getLastMessageAt)
                         .orderByDesc(WxConversationEntity::getId));
+        // 会话层兜底（live 2026-11-24）：C++ 客户端暂不产 wx_conversation 行，表空时
+        // 从 wx_message 聚合会话维度（chat_username 去重 + 条数 + 最近时间），
+        // 消息浏览页才有会话列表可点
+        if (result.getTotal() == 0) {
+            var rows = messageQueryMapper.aggChatsByMessage(account, isGroup, params.pageSize(),
+                    (params.page() - 1) * params.pageSize());
+            long total = messageQueryMapper.countAggChatsByMessage(account, isGroup);
+            var list = rows.stream()
+                    .map(r -> new QueryVOs.ChatVO(null, account, r.getChatUsername(), r.getIsGroup(),
+                            null, r.getLastMessageAt(), r.getMessageCount(), null, r.getLastMessageAt()))
+                    .toList();
+            return new PageVO<>(list, total, params.page(), params.pageSize(),
+                    params.page() * params.pageSize() < total);
+        }
         return PageVO.map(result.getRecords(), result.getTotal(), params.page(), params.pageSize(),
                 QueryVOs.ChatVO::from);
     }

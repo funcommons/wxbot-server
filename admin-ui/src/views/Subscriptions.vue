@@ -119,7 +119,13 @@ const consumerOptions = ref<{ label: string; value: string }[]>([])
 
 function short(id: string) { return (id || '').slice(0, 13) + (id && id.length > 13 ? '…' : '') }
 function isEnabled(row: SubscriptionVO) { return row.enabled === 1 || row.enabled === true }
-function filterText(f?: Record<string, unknown>) { return f ? JSON.stringify(f) : '{}' }
+function filterText(f?: Record<string, unknown> | string) {
+  if (!f) return '{}'
+  if (typeof f === 'string') {
+    try { return JSON.stringify(JSON.parse(f)) } catch { return f }
+  }
+  return JSON.stringify(f)
+}
 
 function syncConsumerOptions() {
   consumerOptions.value = [

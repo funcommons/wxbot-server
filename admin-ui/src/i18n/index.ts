@@ -19,7 +19,7 @@ const zh = {
   dash: {
     title: '概览',
     accounts: '注册账号', consumers: '消费者', subscriptions: '订阅', sessions: '累计消息会话',
-    tokenState: '登录令牌', tokenOk: '有效', tokenExpire: '约 {min} 分钟后过期', refreshNow: '立即续期',
+    tokenState: '登录令牌', tokenOk: '有效', tokenExpire: '约 {min} 分钟后过期', refreshNow: '刷新数据',
   },
   sub: {
     title: '订阅管理', create: '新建订阅', consumerId: '消费者', name: '名称',
@@ -57,7 +57,7 @@ const zh = {
   msg: {
     title: '消息浏览', chatId: '会话 ID', displayName: '显示名', isGroup: '群聊',
     messageCount: '消息数', ofChat: '消息：{chat}', time: '时间', sender: '发送者',
-    type: '类型', body: '内容',
+    type: '类型', body: '内容', loadMore: '加载更多', noMore: '没有更多了',
   },
   err: { reqFail: '请求失败', connFail: '无法连接服务端', kicked: '令牌已失效，请重新登录' },
 }
@@ -81,7 +81,7 @@ const en = {
   dash: {
     title: 'Dashboard',
     accounts: 'Accounts', consumers: 'Consumers', subscriptions: 'Subscriptions', sessions: 'Chat sessions',
-    tokenState: 'Session token', tokenOk: 'Valid', tokenExpire: 'Expires in ~{min} min', refreshNow: 'Renew now',
+    tokenState: 'Session token', tokenOk: 'Valid', tokenExpire: 'Expires in ~{min} min', refreshNow: 'Refresh data',
   },
   sub: {
     title: 'Subscriptions', create: 'New subscription', consumerId: 'Consumer', name: 'Name',
@@ -119,7 +119,7 @@ const en = {
   msg: {
     title: 'Messages', chatId: 'Chat ID', displayName: 'Display name', isGroup: 'Group',
     messageCount: 'Count', ofChat: 'Messages: {chat}', time: 'Time', sender: 'Sender',
-    type: 'Type', body: 'Body',
+    type: 'Type', body: 'Body', loadMore: 'Load more', noMore: 'No more',
   },
   err: { reqFail: 'Request failed', connFail: 'Server unreachable', kicked: 'Token expired — sign in again' },
 }

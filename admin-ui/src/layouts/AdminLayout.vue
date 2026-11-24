@@ -72,7 +72,8 @@ function onLogout() {
 
 <style scoped lang="scss">
 /* 仅布局：颜色/圆角/阴影全部走 SDK token */
-.admin-shell { display: flex; height: 100vh; }
+.admin-shell { display: flex; height: 100vh; align-items: stretch; }
+.admin-shell :deep(.fc-sidebar) { height: 100%; display: flex; flex-direction: column; }
 .admin-body { display: flex; flex: 1; flex-direction: column; min-width: 0; }
 .brand-row { display: flex; align-items: center; justify-content: center; padding: 16px 8px 8px; }
 .brand-name { font-size: 15px; font-weight: 700; color: var(--app-text); white-space: nowrap; }

@@ -107,6 +107,42 @@ public interface WxMessageQueryMapper {
     MessageRow selectDetail(@Param("messageId") long messageId);
 
     /** chat_username 存在性判定（API_DESIGN §7：查询里 chat_username 不存在 → 10400）。只查首屏。 */
+    /** 会话聚合兜底：wx_conversation 未上报时（C++ 客户端暂不产会话层），从消息表聚合会话维度。 */
+    @Select("""
+            SELECT m.chat_username                     AS chatUsername,
+                   (m.chat_username LIKE '%@chatroom') AS isGroup,
+                   count(*)                            AS messageCount,
+                   max(m.create_time)                  AS lastMessageAt,
+                   min(m.create_time)                  AS firstSeenAt
+              FROM wx_message m
+             WHERE (#{account}::text IS NULL OR EXISTS (SELECT 1 FROM wx_message_source_rel sr
+                          WHERE sr.message_id = m.id AND sr.account = #{account}))
+               AND (#{isGroup}::boolean IS NULL OR (m.chat_username LIKE '%@chatroom') = #{isGroup})
+             GROUP BY m.chat_username
+             ORDER BY max(create_time) DESC
+             LIMIT #{limit} OFFSET #{offset}
+            """)
+    List<ChatAggRow> aggChatsByMessage(@Param("account") String account,
+                                       @Param("isGroup") Boolean isGroup,
+                                       @Param("limit") long limit,
+                                       @Param("offset") long offset);
+
+    @Select("SELECT count(DISTINCT m.chat_username) FROM wx_message m "
+            + "WHERE (#{account}::text IS NULL OR EXISTS (SELECT 1 FROM wx_message_source_rel sr "
+            + "WHERE sr.message_id = m.id AND sr.account = #{account})) "
+            + "AND (#{isGroup}::boolean IS NULL OR (m.chat_username LIKE '%@chatroom') = #{isGroup})")
+    long countAggChatsByMessage(@Param("account") String account, @Param("isGroup") Boolean isGroup);
+
+    /** 聚合会话行（@Data：MyBatis setter 自动映射，同 MessageRow 约定）。 */
+    @Data
+    class ChatAggRow {
+        private String chatUsername;
+        private Boolean isGroup;
+        private Long messageCount;
+        private OffsetDateTime lastMessageAt;
+        private OffsetDateTime firstSeenAt;
+    }
+
     @Select("SELECT count(*) FROM wx_message WHERE chat_username = #{chatUsername}")
     long countByChat(@Param("chatUsername") String chatUsername);
 
