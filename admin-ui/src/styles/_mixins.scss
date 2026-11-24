@@ -1,0 +1,19 @@
+// =====================================================================
+// 宿主 mixins：SDK 组件（FcTable / FcFilterButton）引用的 reset-button 等
+// =====================================================================
+
+// 原生按钮重置：清掉 UA 默认样式，交给后续规则接管
+@mixin reset-button {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}

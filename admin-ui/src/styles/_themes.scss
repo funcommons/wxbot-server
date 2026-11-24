@@ -1,0 +1,94 @@
+// =====================================================================
+// 主题维度（light / dark / orange-black）：非 brand 的表面色兜底 + EP token 映射。
+// brand scss 定义 --brand-* 的 light 值；带自有暗面覆写的 brand（apple/ldx2 等）
+// 以 html[data-theme='dark'][data-brand=…] 更高特异性生效，本文件只兜底
+// 没有自带暗面的 brand——任何 data-theme='dark' 下表面 token 都落到暗色。
+// =====================================================================
+
+// ---- dark：通用暗色表面兜底（与 _mixins.brand-dark-surface 同色板）----
+html[data-theme='dark'] {
+  --brand-bg-page: #0f172a;
+  --brand-bg-card: #1f2937;
+  --brand-bg-elevated: #1f2937;
+  --brand-bg-muted: #111827;
+  --brand-text-primary: #f3f4f6;
+  --brand-text-secondary: #d1d5db;
+  --brand-text-tertiary: #9ca3af;
+  --brand-text-quaternary: #6b7280;
+  --brand-sidebar-bg: #1f2937;
+  --brand-sidebar-text-main: #f3f4f6;
+  --brand-sidebar-text-regular: #d1d5db;
+  --brand-sidebar-text-secondary: #9ca3af;
+  --brand-sidebar-hover-bg: #374151;
+  --brand-separator: #374151;
+  --brand-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --brand-shadow-md: 0 2px 6px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --brand-shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.55);
+
+  // ---- Element Plus token 暗色映射（el-table / el-form / el-overlay 内部件）----
+  --el-bg-color: #1f2937;
+  --el-bg-color-page: #0f172a;
+  --el-bg-color-overlay: #273142;
+  --el-fill-color: #111827;
+  --el-fill-color-light: #1f2937;
+  --el-fill-color-lighter: #111827;
+  --el-fill-color-blank: #1f2937;
+  --el-text-color-primary: #f3f4f6;
+  --el-text-color-regular: #d1d5db;
+  --el-text-color-secondary: #9ca3af;
+  --el-text-color-placeholder: #6b7280;
+  --el-border-color: #374151;
+  --el-border-color-light: #374151;
+  --el-border-color-lighter: #374151;
+  --el-border-color-extra-light: #1f2937;
+  --el-mask-color: rgba(0, 0, 0, 0.6);
+}
+
+// ---- orange-black：暗面 + 橙调背景（配色维度示例）----
+html[data-theme='orange-black'] {
+  --brand-bg-page: #14100c;
+  --brand-bg-card: #201a14;
+  --brand-bg-elevated: #201a14;
+  --brand-bg-muted: #191410;
+  --brand-text-primary: #f5f0e8;
+  --brand-text-secondary: #d8cfc2;
+  --brand-text-tertiary: #a89e8f;
+  --brand-text-quaternary: #6b6156;
+  --brand-sidebar-bg: #201a14;
+  --brand-sidebar-text-main: #f5f0e8;
+  --brand-sidebar-text-regular: #d8cfc2;
+  --brand-sidebar-text-secondary: #a89e8f;
+  --brand-sidebar-hover-bg: #2e2620;
+  --brand-separator: #3a2f24;
+  --brand-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --brand-shadow-md: 0 2px 6px rgba(0, 0, 0, 0.55);
+  --brand-shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.6);
+
+  --el-bg-color: #201a14;
+  --el-bg-color-page: #14100c;
+  --el-bg-color-overlay: #2a221b;
+  --el-fill-color: #191410;
+  --el-fill-color-light: #201a14;
+  --el-fill-color-lighter: #191410;
+  --el-fill-color-blank: #201a14;
+  --el-text-color-primary: #f5f0e8;
+  --el-text-color-regular: #d8cfc2;
+  --el-text-color-secondary: #a89e8f;
+  --el-text-color-placeholder: #6b6156;
+  --el-border-color: #3a2f24;
+  --el-border-color-light: #3a2f24;
+  --el-border-color-lighter: #3a2f24;
+  --el-border-color-extra-light: #201a14;
+  --el-mask-color: rgba(0, 0, 0, 0.6);
+}
+
+// ---- EP 主色跟随品牌（三种主题下都生效）----
+html {
+  --el-color-primary: var(--brand-primary);
+  --el-color-primary-light-3: var(--brand-primary-dark, var(--brand-primary));
+  --el-color-primary-light-5: color-mix(in srgb, var(--brand-primary) 50%, white);
+  --el-color-primary-light-7: color-mix(in srgb, var(--brand-primary) 30%, white);
+  --el-color-primary-light-8: color-mix(in srgb, var(--brand-primary) 20%, white);
+  --el-color-primary-light-9: color-mix(in srgb, var(--brand-primary) 10%, white);
+  --el-color-primary-dark-2: var(--brand-primary-dark, var(--brand-primary));
+}

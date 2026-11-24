@@ -1,0 +1,86 @@
+// =====================================================================
+// --app-* 别名层：SDK 组件只消费 --app-*，此处统一映射到 --brand-*
+// （brand scss 提供 light 值；themes.scss 提供暗面兜底与 EP 映射）。
+// =====================================================================
+
+html {
+  // 主色
+  --app-primary: var(--brand-primary);
+  --app-on-primary: var(--brand-on-primary, #ffffff);
+
+  // 文字
+  --app-text: var(--brand-text-primary);
+  --app-text-primary: var(--brand-text-primary);
+  --app-text-secondary: var(--brand-text-secondary);
+  --app-text-tertiary: var(--brand-text-tertiary);
+  --app-text-quaternary: var(--brand-text-quaternary);
+
+  // 背景
+  --app-bg-page: var(--brand-bg-page);
+  --app-bg-card: var(--brand-bg-card);
+  --app-bg-elevated: var(--brand-bg-elevated);
+  --app-bg-muted: var(--brand-bg-muted);
+  --app-sidebar-bg: var(--brand-sidebar-bg);
+  --app-main-bg: var(--brand-bg-page);
+
+  // 边框 / 分隔
+  --app-separator: var(--brand-separator);
+  --app-border-light: var(--brand-separator);
+  --app-border-extra-light: var(--brand-separator);
+
+  // 阴影
+  --app-shadow-sm: var(--brand-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.06));
+  --app-shadow-md: var(--brand-shadow-md, 0 2px 6px rgba(0, 0, 0, 0.08));
+  --app-shadow-lg: var(--brand-shadow-lg, 0 8px 20px rgba(0, 0, 0, 0.12));
+
+  // 圆角
+  --app-radius-sm: 6px;
+  --app-radius-md: 8px;
+  --app-radius-lg: 12px;
+  --app-radius-card: 12px;
+  --app-radius-chip: 999px;
+  --app-radius-full: 999px;
+
+  // 语义色
+  --app-color-success: #22c55e;
+  --app-color-warning: #f59e0b;
+  --app-color-danger: #ef4444;
+  --app-color-info: #6b7280;
+
+  // 字号
+  --app-font-size-base: 14px;
+  --app-font-size-header: 15px;
+
+  // 页头
+  --app-header-height: 56px;
+  --app-header-padding: 0 16px;
+  --app-header-gap: 12px;
+  --app-header-gap-left: 8px;
+  --app-header-gap-right: 8px;
+  --app-header-search-max-width: 280px;
+  --app-header-logo-size: 28px;
+  --app-header-touch-target: 36px;
+  --app-header-bg: transparent;
+  --app-header-shadow: none;
+  --app-header-border-width: 1px;
+  --app-header-border-color: var(--app-separator);
+  --app-header-backdrop: none;
+
+  // 浮层
+  --app-overlay-strong: rgba(0, 0, 0, 0.5);
+  --app-overlay-softer: rgba(0, 0, 0, 0.25);
+
+  // FcSwitch 内部变量
+  --fc-switch-knob: #ffffff;
+  --fc-switch-w: 40px;
+  --fc-switch-h: 22px;
+  --fc-switch-font: 12px;
+}
+
+// 全局底色：页面/正文用 token 铺（组件内已走 var，无需硬编码）
+body {
+  margin: 0;
+  background: var(--app-bg-page);
+  color: var(--app-text);
+  font-size: var(--app-font-size-base);
+}
