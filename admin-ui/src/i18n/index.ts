@@ -15,6 +15,8 @@ const zh = {
     total: '共 {n} 条', all: '全部', enabled: '启用', disabled: '停用', yes: '是', no: '否',
     showOnce: '凭据仅此一次展示，请立即复制保存',
     empty: '暂无数据',
+    emptyState: { empty: '暂无数据', noData: '暂无数据', error: '加载失败',
+                  processing: '处理中', search: '无搜索结果', 'no-result': '无匹配结果' },
   },
   dash: {
     title: '概览',
@@ -81,6 +83,8 @@ const en = {
     total: '{n} items', all: 'All', enabled: 'Enabled', disabled: 'Disabled', yes: 'Yes', no: 'No',
     showOnce: 'Shown once only — copy and store it now',
     empty: 'No data',
+    emptyState: { empty: 'No data', noData: 'No data', error: 'Failed to load',
+                  processing: 'Processing', search: 'No search results', 'no-result': 'No matches' },
   },
   dash: {
     title: 'Dashboard',

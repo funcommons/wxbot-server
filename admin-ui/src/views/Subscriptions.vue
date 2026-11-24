@@ -50,6 +50,7 @@
 
     <!-- 投递明细 -->
     <FcDrawer v-model:open="dlvOpen" :title="t('dlv.titleOf', { name: dlvSubName })" width="820px" append-to-body>
+      <template v-if="dlvOpen">
       <FcFilterBar>
         <FcSegmented v-model="dlvStatus" :options="dlvStatusOptions" @change="dlvPage = 1; loadDeliveries()" />
         <FcButton variant="secondary" size="sm" @click="onRequeueDead">{{ t('dlv.requeueDead') }}</FcButton>
@@ -84,6 +85,7 @@
       </FcTable>
       <FcPagination v-model:current-page="dlvPage" v-model:page-size="dlvPageSize" :total="dlvTotal"
                     style="margin-top: 12px; justify-content: flex-end" @change="loadDeliveries" />
+      </template>
     </FcDrawer>
 
     <!-- 新建订阅 -->
