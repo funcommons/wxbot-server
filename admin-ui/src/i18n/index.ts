@@ -1,7 +1,7 @@
 import { createI18n } from 'vue-i18n'
 
 const zh = {
-  nav: { dashboard: '概览', subscriptions: '订阅', consumers: '消费者', tokens: 'Token 管理', logout: '退出登录' },
+  nav: { dashboard: '概览', subscriptions: '订阅', consumers: '消费者', tokens: 'Token 管理', tasks: '任务', messages: '消息', logout: '退出登录' },
   login: {
     title: 'wxbot-admin 登录',
     hint: '粘贴服务端 application.yml 中 wx-sync.admin-ui-token 配置的固定 Token。',
@@ -49,11 +49,21 @@ const zh = {
   col: {
     id: 'ID', actions: '操作', status: '状态', name: '名称', mode: '模式', value: '值', remark: '备注',
   },
+  task: {
+    title: '任务管理', type: '类型', target: '目标', attempts: '尝试', payload: '载荷',
+    runs: '执行历史', runsTitle: '执行历史：任务 {id}', reset: '重置', cancelOk: '任务已取消',
+    resetOk: '任务已重置回 PENDING', error: '错误', result: '结果',
+  },
+  msg: {
+    title: '消息浏览', chatId: '会话 ID', displayName: '显示名', isGroup: '群聊',
+    messageCount: '消息数', ofChat: '消息：{chat}', time: '时间', sender: '发送者',
+    type: '类型', body: '内容',
+  },
   err: { reqFail: '请求失败', connFail: '无法连接服务端', kicked: '令牌已失效，请重新登录' },
 }
 
 const en = {
-  nav: { dashboard: 'Dashboard', subscriptions: 'Subscriptions', consumers: 'Consumers', tokens: 'Token Mgmt', logout: 'Sign out' },
+  nav: { dashboard: 'Dashboard', subscriptions: 'Subscriptions', consumers: 'Consumers', tokens: 'Token Mgmt', tasks: 'Tasks', messages: 'Messages', logout: 'Sign out' },
   login: {
     title: 'wxbot-admin Sign in',
     hint: 'Paste the fixed token configured as wx-sync.admin-ui-token in the server application.yml.',
@@ -100,6 +110,16 @@ const en = {
   },
   col: {
     id: 'ID', actions: 'Actions', status: 'Status', name: 'Name', mode: 'Mode', value: 'Value', remark: 'Remark',
+  },
+  task: {
+    title: 'Tasks', type: 'Type', target: 'Target', attempts: 'Attempts', payload: 'Payload',
+    runs: 'Runs', runsTitle: 'Runs: task {id}', reset: 'Reset', cancelOk: 'Task cancelled',
+    resetOk: 'Task reset to PENDING', error: 'Error', result: 'Result',
+  },
+  msg: {
+    title: 'Messages', chatId: 'Chat ID', displayName: 'Display name', isGroup: 'Group',
+    messageCount: 'Count', ofChat: 'Messages: {chat}', time: 'Time', sender: 'Sender',
+    type: 'Type', body: 'Body',
   },
   err: { reqFail: 'Request failed', connFail: 'Server unreachable', kicked: 'Token expired — sign in again' },
 }

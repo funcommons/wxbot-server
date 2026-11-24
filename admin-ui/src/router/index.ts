@@ -14,6 +14,8 @@ const router = createRouter({
         { path: 'subscriptions', name: 'Subscriptions', component: () => import('@/views/Subscriptions.vue') },
         { path: 'consumers', name: 'Consumers', component: () => import('@/views/Consumers.vue') },
         { path: 'tokens', name: 'Tokens', component: () => import('@/views/Tokens.vue') },
+        { path: 'tasks', name: 'Tasks', component: () => import('@/views/Tasks.vue') },
+        { path: 'messages', name: 'Messages', component: () => import('@/views/Messages.vue') },
       ],
     },
     { path: '/:pathMatch(.*)*', redirect: '/dashboard' },
@@ -22,6 +24,14 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   const auth = useAuthStore()
+  // ?token= 自动登录（深链/自动化截图便利；命中即剥离 query 防泄漏到地址栏）
+  const qtok = typeof to.query.token === 'string' ? to.query.token : ''
+  if (qtok) {
+    auth.login(qtok)
+    const rest = { ...to.query }
+    delete rest.token
+    return { path: to.path, query: rest, replace: true }
+  }
   if (!to.meta.public && !auth.loggedIn) return { name: 'Login', query: { back: to.fullPath } }
   if (to.name === 'Login' && auth.loggedIn) return { path: '/dashboard' }
   return true
