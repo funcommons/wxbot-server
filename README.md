@@ -149,16 +149,21 @@ Vue 3 + TypeScript + Vite + Element Plus + **Fc SDK 组件库**（`admin-ui/src/
 颜色/圆角/阴影全走 token，业务 0 行颜色 CSS）。History 路由挂 `/admin/` 基座，zh/en 双语，
 mchuan 品牌 + light/dark/orange-black 配色可切换。
 
+| 概览 | 通讯录 | 暗色主题 |
+|---|---|---|
+| ![dashboard](docs/screenshots/dashboard.png) | ![contacts](docs/screenshots/contacts.png) | ![dark](docs/screenshots/dashboard-dark.png) |
+
 ### 功能
 
 | 页面 | 能力 |
 |---|---|
-| 概览 | 账号/消费者/订阅/会话计数，登录令牌状态 |
+| 概览 | 账号/消费者/订阅/会话/任务/联系人计数，最近摄入批次，消息去重总览 |
 | 订阅管理 | 列表（按消费者筛）、新建（POLL/WEBHOOK + filter JSON）、启停、删除、投递明细（状态筛/重投/死信重排） |
 | 消费者管理 | 列表、新建（明文 poll_token/webhook_secret 仅此一次展示）、删除 |
 | Token 管理 | 账号列表、签发令牌对（show-once）、注册账号；注册码签发/列表/作废 |
 | 任务管理 | 状态筛选、执行历史（task-runs 回执）、DEAD 重置、取消 |
 | 消息浏览 | 会话列表（wx_message 聚合，C++ 客户端无会话层时兜底）→ 游标分页消息流 |
+| 通讯录 | 联系人（头像/微信号/昵称/备注/来源筛选）+ 群与成员（群成员抽屉，union 聚合） |
 
 ### 登录
 
