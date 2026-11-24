@@ -15,7 +15,7 @@
         </template>
         <template #actions>
           <FcTag v-if="auth.accessTtl > 0" color="success" size="sm">
-            {{ auth.accessTtl > 1800 ? t('dash.tokenOk') : t('dash.tokenExpire', { min: Math.round(auth.accessTtl / 60) }) }}
+            {{ t('dash.tokenOk') }}
           </FcTag>
           <FcTag v-else color="danger" size="sm">{{ t('err.kicked') }}</FcTag>
         </template>

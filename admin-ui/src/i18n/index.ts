@@ -4,9 +4,8 @@ const zh = {
   nav: { dashboard: '概览', subscriptions: '订阅', consumers: '消费者', tokens: 'Token 管理', logout: '退出登录' },
   login: {
     title: 'wxbot-admin 登录',
-    hint: '粘贴 admin refresh token（或 access + refresh 两者）。令牌来自服务端 bootstrap / admin_token.py。',
-    refresh: 'Refresh Token',
-    access: 'Access Token（可选）',
+    hint: '粘贴服务端 application.yml 中 wx-sync.admin-ui-token 配置的固定 Token。',
+    staticToken: '固定 Admin Token',
     connect: '连接',
     invalid: '令牌无效或服务端不可达',
   },
@@ -57,9 +56,8 @@ const en = {
   nav: { dashboard: 'Dashboard', subscriptions: 'Subscriptions', consumers: 'Consumers', tokens: 'Token Mgmt', logout: 'Sign out' },
   login: {
     title: 'wxbot-admin Sign in',
-    hint: 'Paste the admin refresh token (or both access + refresh). Obtain it from server bootstrap / admin_token.py.',
-    refresh: 'Refresh Token',
-    access: 'Access Token (optional)',
+    hint: 'Paste the fixed token configured as wx-sync.admin-ui-token in the server application.yml.',
+    staticToken: 'Fixed Admin Token',
     connect: 'Connect',
     invalid: 'Token invalid or server unreachable',
   },

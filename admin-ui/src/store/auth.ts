@@ -1,57 +1,24 @@
-// 登录态：模块级 reactive 单例（免 pinia 依赖）；JWT exp 本地解码供页头展示
+// 登录态：固定 admin token（写在服务端 application.yml 的 wx-sync.admin-ui-token）。
+// 服务端过滤器将该串透明换取真实 admin JWT 并自动续签——SPA 无任何刷新动作。
 import { reactive } from 'vue'
-import { post } from '@/api/client'
 
-const KEY = 'wxbot-admin-auth'
+const KEY = 'wxbot-admin-static-token'
 
-interface Persisted { access: string; refresh: string }
-
-function jwtExp(jwt: string): number {
-  try {
-    const p = jwt.split('.')[1]
-    const d = JSON.parse(atob(p.replace(/-/g, '+').replace(/_/g, '=')))
-    return Math.floor(Number(d.exp) / 1000) // 服务端 exp 是毫秒时间戳
-  } catch {
-    return 0
-  }
-}
-
-function load(): Persisted {
-  try { return JSON.parse(localStorage.getItem(KEY) || 'null') || { access: '', refresh: '' } }
-  catch { return { access: '', refresh: '' } }
-}
-
-const saved = load()
-
-const state = reactive({
-  access: saved.access,
-  refresh: saved.refresh,
-})
-
-function persist() {
-  localStorage.setItem(KEY, JSON.stringify({ access: state.access, refresh: state.refresh }))
-}
+const state = reactive({ token: localStorage.getItem(KEY) || '' })
 
 export const useAuthStore = () => ({
-  get access() { return state.access },
-  get refresh() { return state.refresh },
-  get loggedIn() { return Boolean(state.access || state.refresh) },
-  /** access 剩余秒数（exp 缺失视为 0） */
-  get accessTtl() { return state.access ? Math.max(0, jwtExp(state.access) - Math.floor(Date.now() / 1000)) : 0 },
-  /** 登录：refresh 必填（一次性轮换取新对）；access 可选（直接采用） */
-  async login(refreshIn: string, accessIn = '') {
-    const env = await post<{ access_token: string; refresh_token: string }>(
-      '/v1/auth/refresh', { refresh_token: refreshIn.trim() })
-    this.setTokens(accessIn.trim() || env.access_token, env.refresh_token)
-  },
-  setTokens(access: string, refresh: string) {
-    state.access = access
-    state.refresh = refresh
-    persist()
+  get token() { return state.token },
+  get access() { return state.token },          // 兼容 api client 的取值口径
+  get refresh() { return '' },                  // 固定 token 模式无 refresh
+  get loggedIn() { return Boolean(state.token) },
+  /** 固定 token 无 TTL 概念，恒返回 1（页头徽章据此显示有效） */
+  get accessTtl() { return state.token ? 1 : 0 },
+  login(token: string) {
+    state.token = token.trim()
+    localStorage.setItem(KEY, state.token)
   },
   logout() {
-    state.access = ''
-    state.refresh = ''
+    state.token = ''
     localStorage.removeItem(KEY)
   },
 })

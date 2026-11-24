@@ -5,6 +5,9 @@ server:
 # 非空且 wx_account 无任何行时，启动期注册 dev 账号并签发 admin 令牌对（打印到日志，仅 dev 用）
 wx-sync:
   bootstrap-token-seed: ${WXUW_BOOTSTRAP_SEED:}
+  # admin-ui 登录固定 token（SPA 登录页粘贴此串；服务端过滤器将其透明换取真实 admin JWT）
+  # 环境变量 WXUW_ADMIN_UI_TOKEN 可覆盖；生产务必改默认值
+  admin-ui-token: ${WXUW_ADMIN_UI_TOKEN:wxbot-admin-2026}
   # T5 追加：blob 内容寻址文件库根目录（相对运行目录；两级分桶 <aa>/<bb>/<sha256>，
   # 字节不进 PG，SYNCH_PLAN §9.4；env WXUW_BLOB_ROOT 优先）
   blob-root: ${WXUW_BLOB_ROOT:./data/blobs}

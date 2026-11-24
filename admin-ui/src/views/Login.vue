@@ -4,11 +4,8 @@
       <div class="login-title">{{ t('login.title') }}</div>
       <div class="login-hint">{{ t('login.hint') }}</div>
       <el-form label-position="top" @submit.prevent>
-        <FcFormItem :label="t('login.refresh')">
-          <FcInput v-model="refresh" type="password" show-password clearable />
-        </FcFormItem>
-        <FcFormItem :label="t('login.access')">
-          <FcInput v-model="access" type="password" show-password clearable />
+        <FcFormItem :label="t('login.staticToken')">
+          <FcInput v-model="token" type="password" show-password clearable placeholder="wxbot-admin-2026" />
         </FcFormItem>
         <FcButton variant="primary" class="login-btn" :loading="busy" @click="onConnect">
           {{ t('login.connect') }}
@@ -25,22 +22,24 @@ import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { FcSectionCard, FcFormItem, FcInput, FcButton } from '@/components/sdk'
 import { useAuthStore } from '@/store/auth'
+import { get } from '@/api/client'
 
 const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
-const refresh = ref('')
-const access = ref('')
+const token = ref('')
 const busy = ref(false)
 
 async function onConnect() {
-  if (!refresh.value.trim()) return
+  if (!token.value.trim()) return
   busy.value = true
   try {
-    await auth.login(refresh.value, access.value)
+    auth.login(token.value)
+    await get('/v1/accounts?page=1&pageSize=1')  // 校验固定 token 是否被服务端接受
     router.push(String(route.query.back || '/dashboard'))
   } catch {
+    auth.logout()
     ElMessage.error(t('login.invalid'))
   } finally {
     busy.value = false

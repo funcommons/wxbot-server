@@ -2,7 +2,7 @@
   <div class="app-page">
     <FcSectionHeader :title="t('dash.title')">
       <template #actions>
-        <FcButton variant="secondary" size="sm" @click="loadAll">{{ t('dash.refreshNow') }}</FcButton>
+        <FcButton variant="secondary" size="sm" :icon="Refresh" @click="loadAll">{{ t('dash.refreshNow') }}</FcButton>
       </template>
     </FcSectionHeader>
 
@@ -16,9 +16,7 @@
           </FcSectionCard>
         </div>
         <div class="token-row">
-          <FcStatusBadge :tone="(auth.accessTtl > 300 ? 'success' : 'pending') as any"
-                         :label="auth.accessTtl > 300 ? t('dash.tokenOk') : t('dash.tokenExpire', { min: Math.max(1, Math.round(auth.accessTtl / 60)) })" />
-          <FcButton variant="text" size="sm" @click="renew">{{ t('dash.refreshNow') }}</FcButton>
+          <FcStatusBadge tone="success" :label="t('dash.tokenState') + ': ' + t('dash.tokenOk')" />
         </div>
       </template>
     </FcSection>
@@ -27,10 +25,11 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { Refresh } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { FcSectionHeader, FcSection, FcSectionCard, FcSkeleton, FcButton, FcStatusBadge } from '@/components/sdk'
-import { get, post } from '@/api/client'
+import { get } from '@/api/client'
 import type { PageVO } from '@/api/types'
 import { useAuthStore } from '@/store/auth'
 
@@ -64,10 +63,6 @@ async function loadAll() {
   } finally {
     loading.value = false
   }
-}
-
-async function renew() {
-  try { await post('/v1/auth/refresh', { refresh_token: auth.refresh }) } catch { /* 页头徽章会反映状态 */ }
 }
 
 onMounted(loadAll)
