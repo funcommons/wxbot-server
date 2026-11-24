@@ -35,7 +35,7 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { SwitchButton, DataLine, Connection, Share, Key, List, ChatDotRound } from '@element-plus/icons-vue'
+import { SwitchButton, DataLine, Connection, Share, Key, List, ChatDotRound, User } from '@element-plus/icons-vue'
 import {
   FcSidebar, FcSidebarNav, FcSidebarToggle, FcHeader, FcMain,
   FcTag, FcButton, FcThemeSwitcher, type NavItem,
@@ -55,6 +55,7 @@ const navItems: NavItem[] = [
   { index: '/tokens', label: t('nav.tokens'), icon: Key },
   { index: '/tasks', label: t('nav.tasks'), icon: List },
   { index: '/messages', label: t('nav.messages'), icon: ChatDotRound },
+  { index: '/contacts', label: t('nav.contacts'), icon: User },
 ]
 
 const activeTitle = computed(() => {

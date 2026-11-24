@@ -1,7 +1,7 @@
 import { createI18n } from 'vue-i18n'
 
 const zh = {
-  nav: { dashboard: '概览', subscriptions: '订阅', consumers: '消费者', tokens: 'Token 管理', tasks: '任务', messages: '消息', logout: '退出登录' },
+  nav: { dashboard: '概览', subscriptions: '订阅', consumers: '消费者', tokens: 'Token 管理', tasks: '任务', messages: '消息', contacts: '通讯录', logout: '退出登录' },
   login: {
     title: 'wxbot-admin 登录',
     hint: '粘贴服务端 application.yml 中 wx-sync.admin-ui-token 配置的固定 Token。',
@@ -21,7 +21,16 @@ const zh = {
   dash: {
     title: '概览',
     accounts: '注册账号', consumers: '消费者', subscriptions: '订阅', sessions: '累计消息会话',
+    tasks: '累计任务', contacts: '联系人',
     tokenState: '登录令牌', tokenOk: '有效', tokenExpire: '约 {min} 分钟后过期', refreshNow: '刷新数据',
+    batches: '最近摄入批次', startedAt: '开始时间', msgs: '消息数', inserted: '新增',
+    merged: '合并', duration: '耗时(ms)', dedupTitle: '消息去重', dedupKey: '去重键',
+    sources: '来源数', batch: '批次',
+  },
+  contact: {
+    title: '通讯录', tabContacts: '联系人', tabGroups: '群与成员',
+    nickname: '昵称', remark2: '备注', alias: '微信号', source: '来源', rowId: '记录 ID',
+    avatar: '头像', members: '成员', viewMembers: '查看成员', membersOf: '群成员：{group}', owner: '群主',
   },
   sub: {
     title: '订阅管理', create: '新建订阅', consumerId: '消费者', name: '名称',
@@ -69,7 +78,7 @@ const zh = {
 }
 
 const en = {
-  nav: { dashboard: 'Dashboard', subscriptions: 'Subscriptions', consumers: 'Consumers', tokens: 'Token Mgmt', tasks: 'Tasks', messages: 'Messages', logout: 'Sign out' },
+  nav: { dashboard: 'Dashboard', subscriptions: 'Subscriptions', consumers: 'Consumers', tokens: 'Token Mgmt', tasks: 'Tasks', messages: 'Messages', contacts: 'Contacts', logout: 'Sign out' },
   login: {
     title: 'wxbot-admin Sign in',
     hint: 'Paste the fixed token configured as wx-sync.admin-ui-token in the server application.yml.',
@@ -89,7 +98,16 @@ const en = {
   dash: {
     title: 'Dashboard',
     accounts: 'Accounts', consumers: 'Consumers', subscriptions: 'Subscriptions', sessions: 'Chat sessions',
+    tasks: 'Total tasks', contacts: 'Contacts',
     tokenState: 'Session token', tokenOk: 'Valid', tokenExpire: 'Expires in ~{min} min', refreshNow: 'Refresh data',
+    batches: 'Recent ingest batches', startedAt: 'Started', msgs: 'Msgs', inserted: 'Inserted',
+    merged: 'Merged', duration: 'Duration (ms)', dedupTitle: 'Message dedup', dedupKey: 'Dedup key',
+    sources: 'Sources', batch: 'Batch',
+  },
+  contact: {
+    title: 'Contacts', tabContacts: 'Contacts', tabGroups: 'Groups & members',
+    nickname: 'Nickname', remark2: 'Remark', alias: 'WeChat ID', source: 'Source', rowId: 'Row ID',
+    avatar: 'Avatar', members: 'Members', viewMembers: 'Members', membersOf: 'Members: {group}', owner: 'Owner',
   },
   sub: {
     title: 'Subscriptions', create: 'New subscription', consumerId: 'Consumer', name: 'Name',

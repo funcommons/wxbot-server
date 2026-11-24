@@ -16,6 +16,7 @@ const router = createRouter({
         { path: 'tokens', name: 'Tokens', component: () => import('@/views/Tokens.vue') },
         { path: 'tasks', name: 'Tasks', component: () => import('@/views/Tasks.vue') },
         { path: 'messages', name: 'Messages', component: () => import('@/views/Messages.vue') },
+        { path: 'contacts', name: 'Contacts', component: () => import('@/views/Contacts.vue') },
       ],
     },
     { path: '/:pathMatch(.*)*', redirect: '/dashboard' },

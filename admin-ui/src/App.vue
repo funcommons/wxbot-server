@@ -1,5 +1,5 @@
 <template>
-  <FcThemeProvider initial-brand="mchuan" initial-theme="light">
+  <FcThemeProvider :initial-brand="qBrand" :initial-theme="qTheme">
     <router-view />
   </FcThemeProvider>
 </template>
@@ -11,4 +11,9 @@
 
 <script setup lang="ts">
 import { FcThemeProvider } from '@/components/sdk'
+
+// ?brand= / ?theme= 查询参数可覆盖默认（验收截图/演示便利），用户切换仍持久化 localStorage
+const q = new URLSearchParams(window.location.search)
+const qBrand = (q.get('brand') || 'mchuan') as never
+const qTheme = (q.get('theme') || 'light') as never
 </script>
