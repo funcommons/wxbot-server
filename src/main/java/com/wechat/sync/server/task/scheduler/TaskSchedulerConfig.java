@@ -3,6 +3,7 @@ package com.wechat.sync.server.task.scheduler;
 import com.wechat.sync.server.task.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -24,9 +25,15 @@ import java.time.OffsetDateTime;
  * <p>多实例并发（§8）：materialize 的 next_materialize_at 推进带「旧值一致」乐观锁
  * （TaskService#pushNextMaterializeAt），sweep 逐行 FOR UPDATE（selectExpiredForUpdate）行级互斥
  * ——多实例部署正确性不依赖单实例假设（最多浪费一轮重复扫描），不引入 ShedLock。
+ *
+ * <p>测试上下文关闭后台调度（{@code wx-sync.scheduling.enabled=false}）：@SpringBootTest 会拉起
+ * 完整应用，调度线程随之存活——200ms/30s 的拨轮会与集成测试抢同一批「PENDING + 到期」行
+ * （dispatcher 抢认领使 attempts 多加、物化抢跑），表现为只在全量套件里出现的随机失败。
+ * 生产不设该属性即为启用。
  */
 @Slf4j
 @Configuration
+@ConditionalOnProperty(name = "wx-sync.scheduling.enabled", havingValue = "true", matchIfMissing = true)
 @EnableScheduling
 @RequiredArgsConstructor
 public class TaskSchedulerConfig {

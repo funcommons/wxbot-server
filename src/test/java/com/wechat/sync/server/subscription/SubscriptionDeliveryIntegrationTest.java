@@ -77,12 +77,15 @@ import static org.assertj.core.api.Assertions.assertThat;
  * 线上协议（头三件/签名/原始体保真/重序列化拒绝——消费方视角的完整验收），DB 状态机由
  * {@link DeliveryService} 直接驱动（认领/汇报语义已被 WebhookDispatcherTest 单测锚定）。
  *
- * <p><b>存活调度器竞态容忍</b>：本上下文（及并行的 dev 服务进程）里 SubscriptionSchedulerConfig
- * 的五轮 @Scheduled 是活的——dispatch 200ms / sweep 30s / 补扫 60s / 快照 30s。策略：
+ * <p><b>存活调度器竞态</b>：测试 JVM 内的五轮 @Scheduled 已由 surefire 注入的
+ * {@code wx-sync.scheduling.enabled=false} 关闭（200ms 的 dispatch 拨轮会抢认领测试造的
+ * 「PENDING + 立即到期」行——如 requeueDead 之后——使 attempts 多加，曾造成随机失败）。
+ * 但<b>并行运行的 dev 服务进程</b>的调度线程仍会处理全表到期的投递行，故以下容忍策略保留：
  * ① POLL 行 dispatcher 不认领（delivery_mode 互斥）→ A/B/C/G 用 POLL 订阅零竞态；
  * ② E/D 的 WEBHOOK 行直插为 DISPATCHED（带未来 lease_until，sweep 不碰）由本测试驱动，
  *    重臂认领用 {@link #claimMine}（自认领优先，被存活 tick 抢先则收编其新租约，语义不变）；
  * ③ 全部断言以「最终库态」为准，时间敏感断言用区间不用精确值。
+ * 要完全消除竞态须先停掉连同一库的服务端（实测：服务端停止时全量套件 16/16 稳定）。
  *
  * <p><b>数据卫生（最高优先级，先例 TaskDispatchIntegrationTest 口径）</b>：
  * 消费者名 {@code t10it_} 前缀、会话 {@code t10it_*} 前缀、账号 {@code wxid_t10it_*}；

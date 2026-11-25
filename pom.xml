@@ -108,6 +108,18 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <!-- 测试 JVM 关闭后台调度拨轮：@SpringBootTest 会拉起完整应用，存活的调度线程
+                             （200ms 的 dispatcher、30s/60s 的回收与物化）会抢认领测试造的「PENDING + 到期」行，
+                             造成只在全量套件出现的随机失败。只进测试 JVM，生产配置不受影响。 -->
+                        <wx-sync.scheduling.enabled>false</wx-sync.scheduling.enabled>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>

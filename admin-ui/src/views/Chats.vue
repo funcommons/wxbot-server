@@ -14,7 +14,7 @@
           </div>
         </div>
         <div class="sess-scroll" @scroll="onSessScroll">
-          <div v-for="r in viewRows" :key="r.username" class="sess-item"
+          <div v-for="r in viewRows" :key="r.username" class="sess-item" :data-user="r.username"
                :class="{ active: r.username === activeChat }" @click="selectChat(r)">
             <div class="sess-avwrap">
               <FcAvatar :src="avatarOf(r.username)" :name="dispName(r.username)" size="medium" />
@@ -281,6 +281,16 @@ async function loadChats() {
       if (r.last_sender_username) users.add(r.last_sender_username)
     })
     prefetchNames([...users])
+    // 切筛选/账号后，当前会话若不在新列表里：回落到首个会话，避免右侧停留在一个
+    // 列表中已不可见（也就无法取消选中）的会话上
+    if (!rows.value.some((r) => r.username === activeChat.value)) {
+      if (rows.value.length) selectChat(rows.value[0])
+      else {
+        // echoes/drafts 按 chat 键隔离，保留（切回来仍能看到待回执的发送回显）
+        activeChat.value = ''
+        msgs.value = []
+      }
+    }
   } catch (e) {
     ElMessage.error(e instanceof ApiError ? e.message : t('err.reqFail'))
   } finally {
@@ -427,7 +437,7 @@ function selectChat(r: ChatRowVO) {
   loadMsgs(true)
 }
 
-const headTitle = computed(() => dispName(activeChat.value) || 'wxbot')
+const headTitle = computed(() => dispName(activeChat.value))
 const headSub = computed(() => {
   const n = activeChatCount.value
   if (activeChatIsGroup.value) return n ? t('chatv.history', { n }) : ''
@@ -763,13 +773,17 @@ onMounted(async () => {
       (b.last_seen_at || '').localeCompare(a.last_seen_at || ''))
   } catch { /* 账号列表失败不阻塞会话页（发送时 account 为空会被服务端拒绝） */ }
   await loadChats()
-  // 深链 /chats?chat=<username>：自动选中；无深链时仿 wxbot-helper 选中首个会话
+  // 深链 /chats?chat=<username>：自动选中。目标不在首页列表里（很久没动静的会话）时
+  // 合成一行置顶，保证深链不会静默失效；无深链时 loadChats 已回落到首个会话
   const q = (route.query.chat as string) || ''
   if (q) {
     const hit = rows.value.find((r) => r.username === q)
     if (hit) selectChat(hit)
-  } else if (rows.value.length) {
-    selectChat(rows.value[0])
+    else {
+      rows.value = [{ username: q, is_group: q.endsWith('@chatroom') }, ...rows.value]
+      prefetchNames([q])
+      selectChat(rows.value[0])
+    }
   }
 })
 

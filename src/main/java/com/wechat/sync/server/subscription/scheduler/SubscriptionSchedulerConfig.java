@@ -8,6 +8,7 @@ import com.wechat.sync.server.subscription.webhook.WebhookDispatcher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -24,9 +25,14 @@ import java.time.OffsetDateTime;
  *
  * <p>多实例并发：认领（SKIP LOCKED + ON CONFLICT）与汇报（lease 条件 UPDATE）天然并发安全
  * （§9 单实例假设行），仅 worker 数与节拍需按实例复核；不引入 ShedLock（口径同任务域）。
+ *
+ * <p>测试上下文关闭后台调度：{@code wx-sync.scheduling.enabled=false}（口径与原因见
+ * {@link com.wechat.sync.server.task.scheduler.TaskSchedulerConfig}；本类的 @EnableScheduling
+ * 须同步加条件，否则调度器仍会被它拉起）。生产不设该属性即为启用。
  */
 @Slf4j
 @Configuration
+@ConditionalOnProperty(name = "wx-sync.scheduling.enabled", havingValue = "true", matchIfMissing = true)
 @EnableScheduling
 @RequiredArgsConstructor
 public class SubscriptionSchedulerConfig {

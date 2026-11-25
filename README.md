@@ -203,6 +203,11 @@ mvn package && java -jar target/wechat-sync-server-0.1.0-SNAPSHOT.jar
 npm run layout-check   # 需服务端已运行；用本机 Chrome 量 DOM，任一项不通过则 exit 1
 ```
 
+> **跑测试前先停掉连同一个库的服务端。** 集成测试（`@SpringBootTest`）直连 `application.yml`
+> 里的 PostgreSQL，造的是真实的「PENDING + 到期」行；服务端的调度线程会对全表做认领/物化，
+> 与测试抢同一批行，表现为随机的断言失败。测试 JVM 自身的后台调度已由 surefire 关闭
+> （`wx-sync.scheduling.enabled=false`，仅注入测试 JVM），但拦不住另一个进程。
+
 ### 无人值守登录深链
 
 `/admin/dashboard?token=<固定串>` 自动登录（query 即刻剥离，不留在地址栏）。

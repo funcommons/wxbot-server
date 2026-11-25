@@ -71,9 +71,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  *   <li>不 TRUNCATE、不动 v4 表的既有行；@BeforeEach 全量清测试前缀，保证物化三连测互不污染。</li>
  * </ul>
  *
- * <p><b>调度竞态容忍</b>：本上下文里 TaskSchedulerConfig 的 @Scheduled 是活的（15s/30s 首跑），
- * 业务代码不可改 → 回收/物化用例一律断言<b>最终库态</b>而非返回值；测试计划的到期时间先插成
- * 未来、造数完再拨 now()，把「调度线程抢先物化」的窗口压到亚毫秒（两路径产出确定性一致）。
+ * <p><b>调度竞态</b>：测试 JVM 内的后台调度已由 surefire 注入的 {@code wx-sync.scheduling.enabled=false}
+ * 关闭（见 TaskSchedulerConfig 类注释——存活的 200ms/30s 拨轮会抢认领/抢物化测试行，曾造成只在
+ * 全量套件出现的随机失败），所以本上下文里不存在「调度线程抢先」。但本类连的是真库：<b>并行运行的
+ * dev 服务进程</b>同样会对全表做物化/回收，它的调度线程仍可能先一步处理测试造的到期行。
+ * 因此回收/物化用例一律断言<b>最终库态</b>而非返回值；要完全消除竞态须先停掉连同一库的服务端
+ * （实测：服务端停止时全量套件 16/16 稳定）。
  * 客户端路径（claim/complete）需要 token claims：测试线程/工作线程各自
  * {@code TokenContext.set("client", Map.of("account", ACC))}，finally clear。
  */
@@ -517,8 +520,8 @@ class TaskDispatchIntegrationTest {
 
     /**
      * 恢复种子并拨到下一自然周期：enabled=1 + next_materialize_at = now()+interval。
-     * 拨周期的原因：本 JVM 后续还可能复用这个 Spring 上下文（残留调度线程），
-     * 立即到期的种子会被测试期外的 tick 物化掉——推迟一个自然周期语义无损（正常物化节奏本就如此）。
+     * 拨周期的原因：并行的 dev 服务进程（其调度线程是活的）会在种子到期时物化——测试刚恢复
+     * 就立即到期会被它当场物化掉；推迟一个自然周期语义无损（正常物化节奏本就如此）。
      */
     private void restoreSeeds() throws SQLException {
         exec("UPDATE wx_task_schedule SET enabled = 1, "
