@@ -78,22 +78,38 @@ public class QueryService {
                         .eq(WxConversationEntity::getIsDeleted, 0)
                         .orderByDesc(WxConversationEntity::getLastMessageAt)
                         .orderByDesc(WxConversationEntity::getId));
+        List<QueryVOs.ChatVO> list;
+        long total;
         // 会话层兜底（live 2026-11-24）：C++ 客户端暂不产 wx_conversation 行，表空时
         // 从 wx_message 聚合会话维度（chat_username 去重 + 条数 + 最近时间），
         // 消息浏览页才有会话列表可点
         if (result.getTotal() == 0) {
             var rows = messageQueryMapper.aggChatsByMessage(account, isGroup, params.pageSize(),
                     (params.page() - 1) * params.pageSize());
-            long total = messageQueryMapper.countAggChatsByMessage(account, isGroup);
-            var list = rows.stream()
+            total = messageQueryMapper.countAggChatsByMessage(account, isGroup);
+            list = rows.stream()
                     .map(r -> new QueryVOs.ChatVO(null, account, r.getChatUsername(), r.getIsGroup(),
-                            null, r.getLastMessageAt(), r.getMessageCount(), null, r.getLastMessageAt()))
+                            null, r.getLastMessageAt(), r.getMessageCount(), null, r.getLastMessageAt(),
+                            null, null, null))
                     .toList();
-            return new PageVO<>(list, total, params.page(), params.pageSize(),
-                    params.page() * params.pageSize() < total);
+        } else {
+            total = result.getTotal();
+            list = result.getRecords().stream().map(QueryVOs.ChatVO::from).toList();
         }
-        return PageVO.map(result.getRecords(), result.getTotal(), params.page(), params.pageSize(),
-                QueryVOs.ChatVO::from);
+        return PageVO.of(attachLast(list, account), total, params.page(), params.pageSize());
+    }
+
+    /** 当页会话各回填最新一条消息（会话页摘要；两条取数路径共用，空页不发查询）。 */
+    private List<QueryVOs.ChatVO> attachLast(List<QueryVOs.ChatVO> list, String account) {
+        if (list.isEmpty()) {
+            return list;
+        }
+        Map<String, WxMessageQueryMapper.ChatLastRow> last = new HashMap<>();
+        for (WxMessageQueryMapper.ChatLastRow r : messageQueryMapper
+                .lastMessagesByChats(list.stream().map(QueryVOs.ChatVO::username).toList(), account)) {
+            last.putIfAbsent(r.getChatUsername(), r);
+        }
+        return list.stream().map(c -> c.withLast(last.get(c.username()))).toList();
     }
 
     // ------------------------------------------------------- §5.3 / §5.5 messages

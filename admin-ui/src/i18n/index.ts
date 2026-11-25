@@ -1,7 +1,7 @@
 import { createI18n } from 'vue-i18n'
 
 const zh = {
-  nav: { dashboard: '概览', subscriptions: '订阅', consumers: '消费者', tokens: 'Token 管理', tasks: '任务', messages: '消息', contacts: '通讯录', logout: '退出登录' },
+  nav: { dashboard: '概览', chats: '聊天', subscriptions: '订阅', consumers: '消费者', tokens: 'Token 管理', tasks: '任务', messages: '消息', contacts: '通讯录', logout: '退出登录' },
   login: {
     title: 'wxbot-admin 登录',
     hint: '粘贴服务端 application.yml 中 wx-sync.admin-ui-token 配置的固定 Token。',
@@ -74,11 +74,28 @@ const zh = {
     messageCount: '消息数', ofChat: '消息：{chat}', time: '时间', sender: '发送者',
     type: '类型', body: '内容', loadMore: '加载更多', noMore: '没有更多了',
   },
+  chatv: {
+    searchPh: '搜索会话 / 摘要 / 发送者', kindAll: '全部', kindGroups: '群聊', kindDirect: '单聊',
+    loaded: '已载 {n} 条', loadingMore: '加载中…', noMore: '没有更多会话了',
+    noChat: '该账号暂无消息会话', allAccounts: '全部账号',
+    emptyPick: '← 从左侧选择一个会话', refresh: '刷新', history: '历史消息 {n} 条',
+    detailTitle: '会话详情', noMembers: '成员信息不可用',
+    yesterday: '昨天', weekday: '星期{d}', monthDay: '{m}月{d}日', monthDayTime: '{m}月{d}日 {hm}',
+    loadingEarlier: '加载更早的消息…', noEarlier: '没有更早的消息了', loadEarlier: '加载更早',
+    toBottom: '回到底部', revoked: '（已撤回）', msgTitle: '消息详情', contactTitle: '联系人',
+    stranger: '联系人库中无此用户（可能是陌生会话）',
+    composerPh: '输入消息...（Enter 发送，Shift+Enter 换行；经 wxbot-helper OCR 发送）',
+    sendTo: '发送给 {to}（SEND_MESSAGE 任务）', sendingTo: '正在提交给 {to} …',
+    send: '发送', sending: '发送中…',
+    sentAsEcho: '已受理发送任务 #{id}，由 wxbot-helper OCR 执行，回执稍后出现在消息流',
+    sendFail: '发送任务提交失败：{msg}',
+  },
+  ph: { image: '图片', voice: '语音', video: '视频', emoji: '动画表情', location: '位置', card: '链接/文件' },
   err: { reqFail: '请求失败', connFail: '无法连接服务端', kicked: '令牌已失效，请重新登录' },
 }
 
 const en = {
-  nav: { dashboard: 'Dashboard', subscriptions: 'Subscriptions', consumers: 'Consumers', tokens: 'Token Mgmt', tasks: 'Tasks', messages: 'Messages', contacts: 'Contacts', logout: 'Sign out' },
+  nav: { dashboard: 'Dashboard', chats: 'Chats', subscriptions: 'Subscriptions', consumers: 'Consumers', tokens: 'Token Mgmt', tasks: 'Tasks', messages: 'Messages', contacts: 'Contacts', logout: 'Sign out' },
   login: {
     title: 'wxbot-admin Sign in',
     hint: 'Paste the fixed token configured as wx-sync.admin-ui-token in the server application.yml.',
@@ -151,6 +168,23 @@ const en = {
     messageCount: 'Count', ofChat: 'Messages: {chat}', time: 'Time', sender: 'Sender',
     type: 'Type', body: 'Body', loadMore: 'Load more', noMore: 'No more',
   },
+  chatv: {
+    searchPh: 'Search chats / summary / sender', kindAll: 'All', kindGroups: 'Groups', kindDirect: 'Direct',
+    loaded: '{n} loaded', loadingMore: 'Loading…', noMore: 'No more chats',
+    noChat: 'No message chats for this account', allAccounts: 'All accounts',
+    emptyPick: '← Pick a chat on the left', refresh: 'Refresh', history: '{n} messages',
+    detailTitle: 'Chat details', noMembers: 'Members unavailable',
+    yesterday: 'Yesterday', weekday: '{d}', monthDay: '{m}/{d}', monthDayTime: '{m}/{d} {hm}',
+    loadingEarlier: 'Loading earlier messages…', noEarlier: 'No earlier messages', loadEarlier: 'Load earlier',
+    toBottom: 'Back to bottom', revoked: '(revoked)', msgTitle: 'Message details', contactTitle: 'Contact',
+    stranger: 'Not in contacts (possibly a stranger)',
+    composerPh: 'Type a message… (Enter to send, Shift+Enter for newline; sent via wxbot-helper OCR)',
+    sendTo: 'Send to {to} (SEND_MESSAGE task)', sendingTo: 'Submitting to {to} …',
+    send: 'Send', sending: 'Sending…',
+    sentAsEcho: 'Task #{id} accepted — wxbot-helper will OCR-type it; receipt appears in the stream later',
+    sendFail: 'Failed to submit send task: {msg}',
+  },
+  ph: { image: 'Image', voice: 'Voice', video: 'Video', emoji: 'Sticker', location: 'Location', card: 'Link/File' },
   err: { reqFail: 'Request failed', connFail: 'Server unreachable', kicked: 'Token expired — sign in again' },
 }
 

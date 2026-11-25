@@ -149,15 +149,20 @@ Vue 3 + TypeScript + Vite + Element Plus + **Fc SDK 组件库**（`admin-ui/src/
 颜色/圆角/阴影全走 token，业务 0 行颜色 CSS）。History 路由挂 `/admin/` 基座，zh/en 双语，
 mchuan 品牌 + light/dark/orange-black 配色可切换。
 
-| 概览 | 通讯录 | 暗色主题 |
+| 概览 | 聊天 | 通讯录 |
 |---|---|---|
-| ![dashboard](docs/screenshots/dashboard.png) | ![contacts](docs/screenshots/contacts.png) | ![dark](docs/screenshots/dashboard-dark.png) |
+| ![dashboard](docs/screenshots/dashboard.png) | ![chats](docs/screenshots/chats.png) | ![contacts](docs/screenshots/contacts.png) |
+
+| 暗色主题 · 概览 | 暗色主题 · 聊天 |
+|---|---|
+| ![dark](docs/screenshots/dashboard-dark.png) | ![chats dark](docs/screenshots/chats-dark.png) |
 
 ### 功能
 
 | 页面 | 能力 |
 |---|---|
 | 概览 | 账号/消费者/订阅/会话/任务/联系人计数，最近摄入批次，消息去重总览 |
+| 聊天 | 仿微信客户端布局：会话列表（搜索/群聊单聊筛选/账号筛选/最近一条摘要）+ 气泡消息流（时间分隔、群昵称、图片/语音/表情/引用/文件/链接卡片、游标向上翻页）、回到底部、SEND_MESSAGE 任务发送（经 wxbot-helper OCR 执行） |
 | 订阅管理 | 列表（按消费者筛）、新建（POLL/WEBHOOK + filter JSON）、启停、删除、投递明细（状态筛/重投/死信重排） |
 | 消费者管理 | 列表、新建（明文 poll_token/webhook_secret 仅此一次展示）、删除 |
 | Token 管理 | 账号列表、签发令牌对（show-once）、注册账号；注册码签发/列表/作废 |
@@ -189,7 +194,14 @@ mvn package && java -jar target/wechat-sync-server-0.1.0-SNAPSHOT.jar
 ```
 
 开发调试：`npm run dev`（vite 代理 /v1 → 8080）。改动前端只需 `npm run deploy` +
-重打 jar（产物已入库，同 wxbot-helper web_assets 先例）。
+重打 jar（产物已入库，同 wxbot-helper web_assets 先例）。重打 jar 前先停掉运行中的
+服务端，并用 `mvn clean package`（否则历代 hash 资源会累积进 `target/classes`）。
+
+聊天页是 app 式定高布局（输入区钉底、消息区内部滚动），改动布局后跑一次回归探针：
+
+```bash
+npm run layout-check   # 需服务端已运行；用本机 Chrome 量 DOM，任一项不通过则 exit 1
+```
 
 ### 无人值守登录深链
 

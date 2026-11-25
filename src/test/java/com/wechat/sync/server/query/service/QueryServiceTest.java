@@ -284,6 +284,8 @@ class QueryServiceTest {
         verify(conversationMapper, times(2)).selectPage(chatPages.capture(), chatWrappers.capture());
         assertThat(chatPages.getAllValues()).extracting(Page::getCurrent).containsExactly(1L, 3L);
         assertThat(chatPages.getAllValues()).extracting(Page::getSize).containsExactly(20L, 200L);
+        // 空页不发摘要查询（当页无会话可回填）
+        verify(messageQueryMapper, never()).lastMessagesByChats(any(), any());
         chatWrappers.getAllValues().forEach(w -> {
             assertThat(w.getSqlSegment()).contains("is_deleted");
             assertThat(boundValues(w)).contains(0);
@@ -307,6 +309,57 @@ class QueryServiceTest {
         bizError(() -> service.chats(null, null, 1001, 20), 10102, "page");
         bizError(() -> service.contacts(null, null, 2000, 20), 10102, "page");
         verifyNoInteractions(conversationMapper, contactMapper);
+    }
+
+    // ---------- §5.2 会话页摘要（当页会话各回填最新一条消息） ----------
+
+    /** 会话层路径：当页会话按用户名清单下发一次摘要查询；查无消息的会话三个摘要字段保持 null。 */
+    @Test
+    @SuppressWarnings("unchecked")
+    void chatsAttachLatestMessagePerChatAndLeaveOnesWithoutMessagesNull() {
+        Page<WxConversationEntity> page = new Page<>(1, 20);
+        page.setRecords(List.of(conversation(1L, "wxid_room@chatroom"), conversation(2L, "wxid_ghost")));
+        page.setTotal(2);
+        given(conversationMapper.selectPage(any(), any())).willReturn(page);
+        given(messageQueryMapper.lastMessagesByChats(any(), isNull()))
+                .willReturn(List.of(last("wxid_room@chatroom", "wxid_a", "1", "hi")));
+
+        PageVO<QueryVOs.ChatVO> chats = service.chats(null, null, 1, 20);
+
+        assertThat(chats.total()).isEqualTo(2);
+        assertThat(chats.list()).extracting(QueryVOs.ChatVO::username)
+                .containsExactly("wxid_room@chatroom", "wxid_ghost");
+        assertThat(chats.list()).extracting(QueryVOs.ChatVO::lastSenderUsername).containsExactly("wxid_a", null);
+        assertThat(chats.list()).extracting(QueryVOs.ChatVO::lastTypeCode).containsExactly("1", null);
+        assertThat(chats.list()).extracting(QueryVOs.ChatVO::lastBody).containsExactly("hi", null);
+        verify(messageQueryMapper).lastMessagesByChats(List.of("wxid_room@chatroom", "wxid_ghost"), null);
+    }
+
+    /** 聚合兜底路径同样回填摘要，账号过滤条件原样下发到摘要查询（与会话取数同口径）。 */
+    @Test
+    void aggregateFallbackChatsAttachLatestMessageWithAccountFilter() {
+        given(conversationMapper.selectPage(any(), any())).willReturn(new Page<>(1, 20));
+        WxMessageQueryMapper.ChatAggRow agg = new WxMessageQueryMapper.ChatAggRow();
+        agg.setChatUsername(CHAT);
+        agg.setIsGroup(true);
+        agg.setMessageCount(3L);
+        given(messageQueryMapper.aggChatsByMessage("wxid_acc", null, 20L, 0L)).willReturn(List.of(agg));
+        given(messageQueryMapper.countAggChatsByMessage("wxid_acc", null)).willReturn(1L);
+        given(messageQueryMapper.lastMessagesByChats(List.of(CHAT), "wxid_acc"))
+                .willReturn(List.of(last(CHAT, "wxid_a", "3", "<msg/>")));
+
+        PageVO<QueryVOs.ChatVO> chats = service.chats("wxid_acc", null, 1, 20);
+
+        assertThat(chats.total()).isEqualTo(1);
+        assertThat(chats.list()).hasSize(1);
+        QueryVOs.ChatVO c = chats.list().get(0);
+        assertThat(c.username()).isEqualTo(CHAT);
+        assertThat(c.account()).isEqualTo("wxid_acc");
+        assertThat(c.isGroup()).isTrue();
+        assertThat(c.messageCount()).isEqualTo(3L);
+        assertThat(c.lastSenderUsername()).isEqualTo("wxid_a");
+        assertThat(c.lastTypeCode()).isEqualTo("3");
+        assertThat(c.lastBody()).isEqualTo("<msg/>");
     }
 
     // ---------- §5.4 / §5.8 detail 与 attachment ----------
@@ -520,6 +573,23 @@ class QueryServiceTest {
         r.setServerId(9001L);
         r.setSourceAccounts(2L);
         r.setAccountsJson(accountsJson);
+        return r;
+    }
+
+    private static WxConversationEntity conversation(long id, String username) {
+        WxConversationEntity e = new WxConversationEntity();
+        e.setId(id);
+        e.setUsername(username);
+        e.setIsDeleted(0);
+        return e;
+    }
+
+    private static WxMessageQueryMapper.ChatLastRow last(String chat, String sender, String type, String body) {
+        WxMessageQueryMapper.ChatLastRow r = new WxMessageQueryMapper.ChatLastRow();
+        r.setChatUsername(chat);
+        r.setSenderUsername(sender);
+        r.setTypeCode(type);
+        r.setBody(body);
         return r;
     }
 

@@ -52,7 +52,7 @@
     </FcTabsPanel>
 
     <!-- 群成员抽屉 -->
-    <FcDrawer v-model:open="mOpen" :title="t('contact.membersOf', { group: mGroup })" width="640px" append-to-body>
+    <FcDrawer v-model:open="mOpen" :title="t('contact.membersOf', { group: mGroup })" size="640px" append-to-body>
       <template v-if="mOpen">
         <FcTable :data="members" :loading="loadingMembers" stripe>
           <el-table-column prop="member_username" :label="t('msg.chatId')" min-width="200" show-overflow-tooltip />

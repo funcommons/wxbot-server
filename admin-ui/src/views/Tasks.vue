@@ -45,7 +45,7 @@
     </FcSection>
 
     <!-- 执行历史 -->
-    <FcDrawer v-model:open="runsOpen" :title="t('task.runsTitle', { id: runsTaskId })" width="640px" append-to-body>
+    <FcDrawer v-model:open="runsOpen" :title="t('task.runsTitle', { id: runsTaskId })" size="640px" append-to-body>
       <FcTable :data="runs" :loading="runsLoading" stripe>
         <el-table-column prop="attempt_no" :label="t('task.attempts')" width="80" />
         <el-table-column :label="t('col.status')" width="110">

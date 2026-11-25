@@ -18,7 +18,7 @@
     </FcSection>
 
     <!-- 消息浏览 -->
-    <FcDrawer v-model:open="msgOpen" :title="t('msg.ofChat', { chat: activeChat })" width="720px" append-to-body>
+    <FcDrawer v-model:open="msgOpen" :title="t('msg.ofChat', { chat: activeChat })" size="720px" append-to-body>
       <FcTable :data="msgs" :loading="loadingMsgs" stripe>
         <el-table-column :label="t('msg.time')" width="170">
           <template #default="{ row }">{{ fmt(row.create_time) }}</template>

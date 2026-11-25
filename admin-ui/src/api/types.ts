@@ -80,3 +80,55 @@ export interface SubscriptionCreatedVO {
   subscription: SubscriptionVO
   already_exists: boolean
 }
+
+// ---- 聊天视图（/v1/chats + /v1/messages + /v1/contacts）----
+// 注意：framework4j 线上把所有 Long 序列化成 String（JS 精度安全），
+// message_count / create_time_raw / local_id 等计数与时间戳按 string 处理。
+
+export interface ChatRowVO {
+  id?: string | null
+  account?: string | null
+  username: string
+  is_group?: boolean | null
+  display_name?: string | null
+  last_message_at?: string | null
+  message_count?: string | number | null
+  unread?: number | null
+  updated_at?: string | null
+  last_sender_username?: string | null
+  last_type_code?: string | null
+  last_body?: string | null
+}
+
+export interface MessageRowVO {
+  id: string
+  chat_username?: string | null
+  is_group?: boolean | null
+  server_id?: string | null
+  sender_username?: string | null
+  type_code?: string | null
+  type_name?: string | null
+  create_time?: string | null
+  create_time_raw?: string | number | null
+  body?: string | null
+  is_revoked?: boolean
+  revoked_at?: string | null
+  sources?: { account: string; shard: string; local_id: string }[] | null
+}
+
+export interface ContactRowVO {
+  id?: string | null
+  account?: string | null
+  username: string
+  source?: string | null
+  nick_name?: string | null
+  remark?: string | null
+  alias?: string | null
+  big_head_url?: string | null
+}
+
+export interface CursorPageVO<T> {
+  list: T[]
+  next_cursor?: string | null
+  has_more?: boolean
+}

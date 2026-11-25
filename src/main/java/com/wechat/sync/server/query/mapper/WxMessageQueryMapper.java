@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -119,7 +120,7 @@ public interface WxMessageQueryMapper {
                           WHERE sr.message_id = m.id AND sr.account = #{account}))
                AND (#{isGroup}::boolean IS NULL OR (m.chat_username LIKE '%@chatroom') = #{isGroup})
              GROUP BY m.chat_username
-             ORDER BY max(create_time) DESC
+             ORDER BY max(create_time) DESC NULLS LAST
              LIMIT #{limit} OFFSET #{offset}
             """)
     List<ChatAggRow> aggChatsByMessage(@Param("account") String account,
@@ -141,6 +142,51 @@ public interface WxMessageQueryMapper {
         private Long messageCount;
         private OffsetDateTime lastMessageAt;
         private OffsetDateTime firstSeenAt;
+    }
+
+    /**
+     * 会话页摘要（§5.2）：给定当页会话的用户名清单，各取最新一条消息。驱动表是入参清单（VALUES），
+     * 每个会话一次 LATERAL：等值 {@code chat_username} 沿 {@code idx_wx_message_chat_time} 索引序取
+     * 首行即停（LIMIT 1），代价与当页会话数成正比、与各会话消息总量无关——不能用 DISTINCT ON + IN，
+     * 那要把这些会话的全部消息排序去重。
+     *
+     * <p>排序键刻意与索引同序（{@code create_time DESC, id DESC}，id 走 Incremental Sort）：
+     * 一旦写成 {@code NULLS LAST} 就与 DESC 索引的天然序（NULL 在前）不符，规划器会退化成
+     * 「该会话全部行 + 排序 + LIMIT」。无时间行（仅测试夹具会出现）用 {@code IS NOT NULL} 谓词排除，
+     * 既保住索引序又不让它被当成最新一条。
+     *
+     * <p>入参条数即页大小（≤200）。body 截 200 字符：只做列表第二行，全文走消息流 / 详情。
+     * LEFT JOIN：查无（有时间的）消息的会话仍出一行，三个摘要列皆 null。
+     */
+    @Select("""
+            <script>
+            SELECT c.username        AS chatUsername,
+                   m.sender_username AS senderUsername,
+                   m.type_code       AS typeCode,
+                   left(m.body, 200) AS body
+              FROM (VALUES <foreach collection="usernames" item="u" separator=",">(#{u})</foreach>) AS c(username)
+              LEFT JOIN LATERAL (
+                    SELECT m2.sender_username, m2.type_code, m2.body
+                      FROM wx_message m2
+                     WHERE m2.chat_username = c.username
+                       AND m2.create_time IS NOT NULL
+                       AND (#{account}::text IS NULL OR EXISTS (SELECT 1 FROM wx_message_source_rel sr
+                                WHERE sr.message_id = m2.id AND sr.account = #{account}))
+                     ORDER BY m2.create_time DESC, m2.id DESC
+                     LIMIT 1
+              ) m ON true
+            </script>
+            """)
+    List<ChatLastRow> lastMessagesByChats(@Param("usernames") Collection<String> usernames,
+                                          @Param("account") String account);
+
+    /** 会话页摘要行（每会话最新一条消息；@Data：MyBatis setter 自动映射，同 MessageRow 约定）。 */
+    @Data
+    class ChatLastRow {
+        private String chatUsername;
+        private String senderUsername;
+        private String typeCode;
+        private String body;
     }
 
     @Select("SELECT count(*) FROM wx_message WHERE chat_username = #{chatUsername}")

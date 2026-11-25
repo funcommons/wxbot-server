@@ -20,13 +20,29 @@ public final class QueryVOs {
     private QueryVOs() {
     }
 
-    /** §5.2 会话（wx_conversation 行，display_name 口径 remark or nick_name or username 由 ingest 维护）。 */
+    /**
+     * §5.2 会话（wx_conversation 行，display_name 口径 remark or nick_name or username 由 ingest 维护）。
+     *
+     * <p>末三参是会话页摘要——该会话最新一条消息的发送者 / 类型码 / 正文前 200 字（服务层对当页
+     * 会话回填；该会话查无消息时为 null）。仅作列表第二行展示，全文走消息流与详情接口。
+     */
     public record ChatVO(Long id, String account, String username, Boolean isGroup, String displayName,
                          OffsetDateTime lastMessageAt, Long messageCount, Integer unread,
-                         OffsetDateTime updatedAt) {
+                         OffsetDateTime updatedAt,
+                         String lastSenderUsername, String lastTypeCode, String lastBody) {
         public static ChatVO from(WxConversationEntity e) {
             return new ChatVO(e.getId(), e.getAccount(), e.getUsername(), e.getIsGroup(), e.getDisplayName(),
-                    e.getLastMessageAt(), e.getMessageCount(), e.getUnread(), e.getUpdatedAt());
+                    e.getLastMessageAt(), e.getMessageCount(), e.getUnread(), e.getUpdatedAt(),
+                    null, null, null);
+        }
+
+        /** 回填会话页摘要；{@code last} 为 null（查无消息）时原样返回。 */
+        public ChatVO withLast(WxMessageQueryMapper.ChatLastRow last) {
+            if (last == null) {
+                return this;
+            }
+            return new ChatVO(id, account, username, isGroup, displayName, lastMessageAt, messageCount, unread,
+                    updatedAt, last.getSenderUsername(), last.getTypeCode(), last.getBody());
         }
     }
 

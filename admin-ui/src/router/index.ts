@@ -11,6 +11,7 @@ const router = createRouter({
       children: [
         { path: '', redirect: '/dashboard' },
         { path: 'dashboard', name: 'Dashboard', component: () => import('@/views/Dashboard.vue') },
+        { path: 'chats', name: 'Chats', component: () => import('@/views/Chats.vue') },
         { path: 'subscriptions', name: 'Subscriptions', component: () => import('@/views/Subscriptions.vue') },
         { path: 'consumers', name: 'Consumers', component: () => import('@/views/Consumers.vue') },
         { path: 'tokens', name: 'Tokens', component: () => import('@/views/Tokens.vue') },

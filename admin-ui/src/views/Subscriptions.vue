@@ -49,7 +49,7 @@
     </FcSection>
 
     <!-- 投递明细 -->
-    <FcDrawer v-model:open="dlvOpen" :title="t('dlv.titleOf', { name: dlvSubName })" width="820px" append-to-body>
+    <FcDrawer v-model:open="dlvOpen" :title="t('dlv.titleOf', { name: dlvSubName })" size="820px" append-to-body>
       <template v-if="dlvOpen">
       <FcFilterBar>
         <FcSegmented v-model="dlvStatus" :options="dlvStatusOptions" @change="dlvPage = 1; loadDeliveries()" />
